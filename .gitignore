@@ -1,0 +1,13 @@
+/speech_commands_v0.02/
+/Complete cache/
+/venv/
+/.idea/
+
+/train_cache.data-00000-of-00001
+/train_cache.index
+/validation_cache.data-00000-of-00001
+/validation_cache.index
+/test_cache.data-00000-of-00001
+/test_cache.index
+/my_model.h5
+
