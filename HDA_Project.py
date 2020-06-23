@@ -9,6 +9,11 @@ import glob
 import tensorflow as tf
 import csv
 import pandas as pd
+from python_speech_features import mfcc
+from python_speech_features import delta
+from python_speech_features import logfbank
+import scipy.io.wavfile as wav
+import matplotlib.pyplot as plt
 
 from tensorflow.keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D
 from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
@@ -102,7 +107,45 @@ def which_set(filename, validation_percentage, testing_percentage):
         result = 'training'
     return result
 
-def load_and_preprocess_data(file_path, n_fft, hop_length, n_mels):
+
+def load_and_preprocess_data_librosa_mel_spectrogram(file_path, n_fft, hop_length, n_mels):
+    """
+    Function called inside create dataset, it loads from the file a single sample and extracts the mfcc features
+    :param file_path: path of the sample considered
+    :param n_fft: dft frequency
+    :param hop_length: length by how much the window shift at each iteration
+    :param n_mels: number of MFCCs to return
+    :return: mfcc features computed from the audio sample
+    """
+    y, sr = librosa.load(file_path, sr=16000)
+    N = y.shape[0]
+    print(N)
+    target_size = 16000
+    if N < target_size:
+        tot_pads = target_size - N
+        left_pads = int(np.ceil(tot_pads / 2))
+        right_pads = int(np.floor(tot_pads / 2))
+        y = np.pad(y, [left_pads, right_pads], mode='constant', constant_values=(0, 0))
+    elif N < target_size:
+        from_ = int((N / 2) - (target_size / 2))
+        to_ = from_ + target_size
+        y = y[from_:to_]
+
+    librosa_melspec = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=1024,
+                                                     hop_length=128, power=1.0,  # window='hann',
+                                                     n_mels=80, fmin=40.0, fmax=sr / 2)
+
+    S_dB = librosa.power_to_db(librosa_melspec, ref=np.max)
+
+
+    S_dB = S_dB.reshape((S_dB.shape[0], S_dB.shape[1], 1))
+    S_dB = normalize_data(S_dB)
+
+    return S_dB.astype(np.float32)
+
+
+
+def load_and_preprocess_data_librosa(file_path, n_fft, hop_length, n_mels):
     """
     Function called inside create dataset, it loads from the file a single sample and extracts the mfcc features
     :param file_path: path of the sample considered
@@ -126,8 +169,50 @@ def load_and_preprocess_data(file_path, n_fft, hop_length, n_mels):
 
     mel_features = librosa.feature.mfcc(y, sr=sr, n_mfcc=n_mels, n_fft=n_fft, hop_length=hop_length)
     mel_features = mel_features.reshape((mel_features.shape[0], mel_features.shape[1], 1))
+    mel_features = normalize_data(mel_features)
+
     return mel_features.astype(np.float32)
 
+def load_and_preprocess_data_python_speech_features(file_path, n_fft, hop_length, n_mels):
+    """
+    Function called inside create dataset, it loads from the file a single sample and extracts the mfcc features
+    :param file_path: path of the sample considered
+    :param n_fft: dft frequency
+    :param hop_length: length by how much the window shift at each iteration
+    :param n_mels: number of MFCCs to return
+    :return: mfcc features computed from the audio sample
+    """
+    n_mels = 40
+    window_duration = 0.025
+    frame_step = 0.010
+
+    (sr, y) = wav.read(file_path)
+    #print(sr)
+    #print(y.shape)
+    N = y.shape[0]
+
+    target_size = 16000
+    if N < target_size:
+        tot_pads = target_size - N
+        left_pads = int(np.ceil(tot_pads / 2))
+        right_pads = int(np.floor(tot_pads / 2))
+        y = np.pad(y, [left_pads, right_pads], mode='constant', constant_values=(0, 0))
+    elif N < target_size:
+        from_ = int((N / 2) - (target_size / 2))
+        to_ = from_ + target_size
+        y = y[from_:to_]
+
+    mfcc_feat = mfcc(y, sr, winlen=window_duration, winstep=0.01, numcep=n_mels, nfilt=n_mels * 2, ceplifter=0)
+    mfcc_feat = -normalize_data(mfcc_feat).T
+    mfcc_feat = mfcc_feat.reshape((mfcc_feat.shape[0], mfcc_feat.shape[1], 1))
+
+
+    return mfcc_feat.astype(np.float32)
+
+def normalize_data(data):
+    # Amplitude estimate
+    norm_factor = np.percentile(data, 99) - np.percentile(data, 5)
+    return (data / norm_factor)
 
 def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, n_mels, cache_file=None):
     """
@@ -141,7 +226,7 @@ def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, 
     :param cache_file: name of the cache file
     :return: the dataset
     """
-    sample_rate = 22050
+    sample_rate = 16000
     n_fft = int(window_duration * sample_rate)
     hop_length = int(frame_step * sample_rate)
 
@@ -150,8 +235,11 @@ def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, 
 
     dataset = tf.data.Dataset.from_tensor_slices((file_paths, labels))
 
-    py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data, [file_path, n_fft, hop_length, n_mels],
-                                                          tf.float32), label)
+    #py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_librosa, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
+    py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_librosa_mel_spectrogram, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
+
+    #py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_python_speech_features, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
+
     dataset = dataset.map(py_func, num_parallel_calls=os.cpu_count())
 
     # Cache dataset
@@ -182,17 +270,23 @@ def modelconvNN(input_shape):
 
     X_input = tf.keras.Input(input_shape)
 
-    X = tf.keras.layers.Conv2D(100, (8, 16), strides=(1, 4))(X_input)
+    X = tf.keras.layers.Conv2D(32, (8, 16), strides=(1, 4))(X_input)
     X = BatchNormalization(axis=3,)(X)
     X = tf.keras.layers.Activation('relu')(X)
 
-    X = MaxPooling2D((1, 3), name='max_pool')(X)
+    X = MaxPooling2D((2, 2), name='max_pool')(X)
 
-    X = tf.keras.layers.Conv2D(78, (4, 5), strides=(1,1))(X)
+    X = tf.keras.layers.Conv2D(64, (4, 5), strides=(1, 1))(X)
     X = BatchNormalization(axis=3, )(X)
     X = tf.keras.layers.Activation('relu')(X)
 
-    #X = MaxPooling2D((1, 3), name='max_pool1')(X)
+    X = MaxPooling2D((2, 2), name='max_pool1')(X)
+
+    X = tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+
+    X = MaxPooling2D((2, 2), name='max_pool2')(X)
 
     X = tf.keras.layers.Flatten()(X)
 
@@ -231,6 +325,7 @@ if __name__ == '__main__':
 
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
 
+    # compute 2 dictionaries for swiching between label in string or int
     classToNum = {}
     numToClass = {}
     num = 0
@@ -241,15 +336,22 @@ if __name__ == '__main__':
         numToClass[num] = cl
         num += 1
 
-
+    # change label from string to int
     train_reference['label'] = train_reference['label'].apply(lambda l: classToNum[l])
     validation_reference['label'] = validation_reference['label'].apply(lambda l: classToNum[l])
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
+
+
 
     # initialize preprocessing variables
     n_mels = 40
     window_duration = 0.025
     frame_step = 0.010
+    
+    sample_rate = 16000
+    n_fft = int(window_duration * sample_rate)
+    hop_length = int(frame_step * sample_rate)
+
 
     batch_size = 32
     # create the tensorflow dataset for train, validation and test
@@ -261,20 +363,31 @@ if __name__ == '__main__':
     for element in train_dataset.as_numpy_iterator():
         #print(element)
         print(element[0].shape)
-        print(element[0])
+
+        #print(element[0])
+        plt.figure(figsize=(17, 6))
+        plt.pcolormesh(element[0][0,:,:,0])
+
+        plt.title('Spectrogram visualization - librosa')
+        plt.ylabel('Frequency')
+        plt.xlabel('Time')
+        plt.show()
         break
 
     # Call the function to create the model and compile it
-    model = modelconvNN((n_mels, int(1/(frame_step)+1), 1))
+    #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
+    model = modelconvNN((80, 126, 1))
     model.summary()
 
     train_steps = int(np.ceil(len(train_reference) / batch_size))
     val_steps = int(np.ceil(len(validation_reference) / batch_size))
 
-    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     num_epochs = 30
 
     # Fit the model
     history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
     model.save('my_model.h5')
+
+    #"""
