@@ -8,6 +8,7 @@ import os
 import glob
 import tensorflow as tf
 import csv
+import scipy
 import pandas as pd
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
@@ -163,111 +164,93 @@ if __name__ == '__main__':
     validation_reference['label'] = validation_reference['label'].apply(lambda l: classToNum[l])
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
 
-    """
+    #### Start testing the preprocessing alternatives
+
+
     # initialize preprocessing variables
     n_mels = 40
+    n_mfcc = 13
     window_duration = 0.025
     frame_step = 0.010
-
+    # the sample rate is always fixed at 16000
     sample_rate = 16000
+
+    #length of the fft window(how many time samples are in a single window)
     n_fft = int(window_duration * sample_rate)
+    #how many time samples are in between the starting point of two contiguous windows
     hop_length = int(frame_step * sample_rate)
-    
+
+    #sample that is considered for the feature extraction visualization
     sample = train_reference.iloc[0].name
 
-    y, sr = librosa.load(sample)
-    librosaMFCC = librosa.feature.mfcc(y, sr=sr, n_mfcc=n_mels, n_fft=n_fft, hop_length=hop_length)
-    librosaMFCC = normalize_data(librosaMFCC)
+    # librosa loader has default sample rate of 22050 and we need to specify the actual sr
+    y, sr = librosa.load(sample, sr=16000)
+
+    librosaMFCC = librosa.feature.mfcc(y, sr=sr, n_mfcc=n_mfcc, n_mels=n_mels, n_fft=n_fft, hop_length=hop_length, window=scipy.signal.windows.hamming, fmin=300)
+    #librosaMFCC = normalize_data(librosaMFCC)
+
     print(librosaMFCC.shape, "using librosa\n", librosaMFCC)
 
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.linspace(0, len(y) / sample_rate, num=len(y)), y)
-    plt.imshow(librosaMFCC, aspect='auto', origin='lower')
+    plt.figure(figsize=(5, 3))
+    plt.pcolormesh(librosaMFCC[1:,:])
+
+    plt.title('MFCC using librosa - parameters given in class')
+    plt.ylabel('MFCC Coefficients')
+    plt.xlabel('Time')
+    plt.colorbar()
     plt.show()
 
     (rate, sig) = wav.read(sample)
-    mfcc_feat = mfcc(sig, rate, winlen=window_duration, winstep=0.01, numcep=n_mels, nfilt=n_mels*2, ceplifter=0)
+    mfcc_feat = mfcc(sig, rate, winlen=window_duration, winstep=frame_step, numcep=n_mfcc, nfilt=n_mels, ceplifter=0)
     mfcc_feat = normalize_data(mfcc_feat).T
 
     print(mfcc_feat.shape, "using python speach features\n", mfcc_feat)
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.linspace(0, len(sig) / sample_rate, num=len(sig)), sig)
-    plt.imshow(mfcc_feat, aspect='auto', origin='lower')
+    plt.figure(figsize=(5, 3))
+    plt.pcolormesh(mfcc_feat[1:, :])
+
+    plt.title('MFCC using python_speach_features - parameters given in class')
+    plt.ylabel('MFCC Coefficients')
+    plt.xlabel('Time')
+    plt.colorbar()
     plt.show()
 
-    sample = train_reference.iloc[1].name
-    y, sr = librosa.load(sample)
-    librosaMFCC = librosa.feature.mfcc(y, sr=sr, n_mfcc=n_mels, n_fft=n_fft, hop_length=hop_length)
-    librosaMFCC = normalize_data(librosaMFCC)
-    print(librosaMFCC.shape, "using librosa\n", librosaMFCC)
-
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.linspace(0, len(y) / sample_rate, num=len(y)), y)
-    plt.imshow(librosaMFCC, aspect='auto', origin='lower')
-    plt.show()
-    """
-    n_mels = 40
-    window_duration = 0.025
-    frame_step = 0.010
-    sample_rate = 16000
-    n_fft = int(window_duration * sample_rate)
-    hop_length = int(frame_step * sample_rate)
-
-    sample = train_reference.iloc[15].name
-    (rate, sig) = wav.read(sample)
-    sig = normalize_data(sig)
-    plt.plot(sig)
-    mfcc_feat = mfcc(sig, rate, winlen=window_duration, winstep=0.01, numcep=n_mels, nfilt=n_mels * 2, ceplifter=0)
-    mfcc_feat = normalize_data(mfcc_feat).T
-
-    print(mfcc_feat.shape, "using python speach features\n", mfcc_feat)
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.linspace(0, len(sig) / sample_rate, num=len(sig)), sig)
-    plt.imshow(mfcc_feat, aspect='auto', origin='lower')
-    plt.show()
-
-    mfcc_feat = load_and_preprocess_data_python_speech_features(sample, n_fft, hop_length, n_mels)
-    mfcc_feat = mfcc_feat.reshape(mfcc_feat.shape[0], mfcc_feat.shape[1])
-    print(mfcc_feat.shape, "using python speach features\n", mfcc_feat)
-    plt.figure(figsize=(15, 5))
-    plt.plot(np.linspace(0, len(sig) / sample_rate, num=len(sig)), sig)
-    plt.imshow(mfcc_feat, aspect='auto', origin='lower')
-    plt.show()
-
-    sample = train_reference.iloc[15].name
-    y, sr = librosa.load(sample)
-    #y=normalize_data(y)
+    y, sr = librosa.load(sample, sr=16000)
     # Check if mel spectrogram matches the one computed with librosa
+
     librosa_melspec = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=1024,
                                                      hop_length=128, power=1.0,  # window='hann',
-                                                     n_mels=80, fmin=40.0, fmax=sr / 2)
+                                                     n_mels=80, fmin=40.0, fmax=sr/2)
 
     S_dB = librosa.power_to_db(librosa_melspec, ref=np.max)
-    plt.figure(figsize=(17, 6))
-    plt.pcolormesh(S_dB)
 
-    plt.title('Spectrogram visualization - librosa')
+    #S_dB -= (np.mean(S_dB, axis=0) + 1e-8)
+    S_dB =normalize_data(S_dB)
+    plt.figure(figsize=(5, 3))
+    plt.pcolormesh(S_dB)
+    plt.title('Mel Spectrogram - librosa')
     plt.ylabel('Frequency')
     plt.xlabel('Time')
-
+    plt.colorbar()
     plt.show()
 
 
 
+    """
     mel_librosa = load_and_preprocess_data_librosa_mel_spectrogram(sample, n_fft, hop_length, n_mels)
     mel_librosa = mel_librosa.reshape(mel_librosa.shape[0], mel_librosa.shape[1])
 
-    plt.figure(figsize=(17, 6))
-    plt.pcolormesh(mel_librosa[:, :])
+    plt.figure(figsize=(5, 3))
+    plt.pcolormesh(mel_librosa)
 
-
-    plt.title('Spectrogram visualization - librosa function')
+    plt.title('Mel Spectrogram - librosa')
     plt.ylabel('Frequency')
     plt.xlabel('Time')
+    plt.colorbar()
+    #plt.legend()
     plt.show()
 
     print("max mel_librosa ",np.max(mel_librosa)," min ", np.min(mel_librosa))
-
+    """
     melspecModel = Sequential()
 
     melspecModel.add(Melspectrogram(n_dft=1024, n_hop=128, input_shape=(1, 16000),
@@ -290,10 +273,11 @@ if __name__ == '__main__':
     melspec = melspecModel.predict(y)
     print(melspec.shape)
 
-    plt.figure(figsize=(17, 6))
+    plt.figure(figsize=(5, 3))
     plt.pcolormesh(melspec[0,:,:,0])
 
-    plt.title('Spectrogram visualization - kapre')
+    plt.title('Mel Spectrogram visualization - kapre')
     plt.ylabel('Frequency')
     plt.xlabel('Time')
+    plt.colorbar()
     plt.show()
