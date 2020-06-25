@@ -11,3 +11,7 @@
 /test_cache.index
 /my_model.h5
 
+/silence/
+/speech_commands_test_set_v0.02/
+*.index
+*.data-00000-of-00001

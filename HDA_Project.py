@@ -63,6 +63,89 @@ def generate_train_val_test_list(dataset_path, perc_val, perc_test, name_train, 
     print("samples for training", len(train_list), "samples for validation", len(val_list), "samples for testing", len(test_list))
 
 
+def generate_train_val_test_list(dataset_path, name_train, name_val, name_test):
+    # read split from files and all files in folders
+    basePath = dataset_path
+    test_list = pd.read_csv(basePath + 'testing_list.txt',
+                           sep=" ", header=None)[0].tolist()
+    val_list = pd.read_csv(basePath + 'validation_list.txt',
+                          sep=" ", header=None)[0].tolist()
+    for i in range(len(test_list)):
+        test_list[i] = dataset_path+test_list[i]
+
+    for i in range(len(val_list)):
+        val_list[i] = dataset_path + val_list[i]
+
+    all_list = []
+
+
+    for root, dirs, files in os.walk(basePath):
+        if root != (dataset_path+"_background_noise_"):
+            all_list += [root + '/' + f for f in files if f.endswith('.wav')]
+    train_list = list(set(all_list) - set(val_list) - set(test_list))
+
+    silence_path = './silence'
+    silence_list = []
+    for root, dirs, files in os.walk(silence_path):
+        silence_list += [root + '/' +
+                           f for f in files if f.endswith('.wav')]
+
+    print(silence_list)
+    for i in silence_list:
+        r_num = np.random.rand()
+        if r_num >= 0.2:
+            train_list.append(i)
+        elif r_num <= 0.1:
+            val_list.append(i)
+        else:
+            test_list.append(i)
+
+    #print(trainWAVs)
+    test_list.sort()
+    val_list.sort()
+    train_list.sort()
+
+
+    f = open(name_train, 'w')
+    for ele in train_list:
+        f.write(ele + "," + ele.split('/')[-2] + '\n')
+
+    f = open(name_val, 'w')
+    for ele in val_list:
+        f.write(ele + "," + ele.split('/')[-2] + '\n')
+
+    f = open(name_test, 'w')
+    for ele in test_list:
+        f.write(ele + "," + ele.split('/')[-2] + '\n')
+
+    test_set_path = './speech_commands_test_set_v0.02/'
+    real_test_list = []
+    for root, dirs, files in os.walk(test_set_path):
+        real_test_list += [root.replace(test_set_path, "") + '/' +
+                         f for f in files if f.endswith('.wav')]
+
+    f = open('real_'+name_test, 'w')
+    for ele in real_test_list:
+        f.write(ele + "," + ele.split('/')[0] + '\n')
+
+
+def generate_silence_samples(dataset_path):
+    file_list = []
+    for filename in glob.glob(os.path.join(dataset_path+'_background_noise_', '*.wav')):
+        y, sr = librosa.load(filename, sr = 16000)
+        file_list.append(y)
+
+    silence_dir = "./silence/"
+    #os.mkdir(silence_dir)
+
+    for i in range(4000):
+        idx = np.random.randint(0, len(file_list)) #chose a file
+        random_start = np.random.randint(0, len(file_list[idx]) - 16000)
+        new_sample = file_list[idx][random_start:random_start + 16000]
+        librosa.output.write_wav(silence_dir+str(i)+".wav", new_sample, 16000)
+
+
+
 
 def which_set(filename, validation_percentage, testing_percentage):
     """Determines which data partition the file should belong to.
@@ -119,7 +202,7 @@ def load_and_preprocess_data_librosa_mel_spectrogram(file_path, n_fft, hop_lengt
     """
     y, sr = librosa.load(file_path, sr=16000)
     N = y.shape[0]
-    print(N)
+    #print(N)
     target_size = 16000
     if N < target_size:
         tot_pads = target_size - N
@@ -214,7 +297,13 @@ def normalize_data(data):
     norm_factor = np.percentile(data, 99) - np.percentile(data, 5)
     return (data / norm_factor)
 
-def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, n_mels, cache_file=None):
+def filter_fn(x, y):
+    print(x)
+    print(y)
+    return ((not tf.math.equal(y, 10)) or np.random.rand() < 1 / 25)
+
+
+def create_dataset(dataset_path, reference, batch_size, shuffle, window_duration, frame_step, n_mels, filter, cache_file=None):
     """
     Create dataset and store a cached version
     :param reference: list of the path for each sample in the dataset and their class
@@ -250,8 +339,8 @@ def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, 
     if shuffle:
         dataset = dataset.shuffle(len(file_paths))
 
-    # Repeat the dataset indefinitely
-    #dataset = dataset.repeat()
+    #Repeat the dataset indefinitely
+    dataset = dataset.repeat()
 
     # Batch
     dataset = dataset.batch(batch_size=batch_size)
@@ -290,7 +379,7 @@ def modelconvNN(input_shape):
 
     X = tf.keras.layers.Flatten()(X)
 
-    X = tf.keras.layers.Dense(2, activation='softmax', name='fc2')(X)
+    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
 
     # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
     model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
@@ -300,49 +389,125 @@ def modelconvNN(input_shape):
 
 if __name__ == '__main__':
 
-    hashlib.sha256(str(random.getrandbits(256)).encode('utf-8')).hexdigest()
-    'cd183a211ed2434eac4f31b317c573c50e6c24e3a28b82ddcb0bf8bedf387a9f'
-    refresh_dataset_lists = False
-
     dataset_path = './speech_commands_v0.02/'
 
-    if(refresh_dataset_lists):
-        generate_train_val_test_list(dataset_path, perc_val=10, perc_test=10, name_train='train_dataset.csv', name_val='validation_dataset.csv', name_test='test_dataset.csv')
+    #generate_silence_samples(dataset_path)
 
+    refresh_dataset_lists = False
+
+    if(refresh_dataset_lists):
+        generate_train_val_test_list(dataset_path, name_train='train_dataset.txt', name_val='validation_dataset.txt', name_test='test_dataset.txt')
+
+    # fraction of the total that will be left out from the training
+    masking_fraction = 0.90
 
     # read the list for each set and select only wanted classes
-    train_reference = pd.read_csv('train_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (train_reference['label'] == 'backward') | (train_reference['label'] == 'bed')
-    train_reference = train_reference[mask]
+    train_reference = pd.read_csv('train_dataset.txt', index_col=0, header=None, names=['label'])
 
-    validation_reference = pd.read_csv('validation_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (validation_reference['label'] == 'backward') | (validation_reference['label'] == 'bed')
-    validation_reference = validation_reference[mask]
+    mask_train = np.random.rand(train_reference.size) >= masking_fraction
+    print(mask_train)
 
-    test_reference = pd.read_csv('test_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (test_reference['label'] == 'backward') | (test_reference['label'] == 'bed')
-    test_reference = test_reference[mask]
+    print("train_reference size before mask ",train_reference.size)
+    train_reference = train_reference[mask_train]
+    print("train_reference size after mask ", train_reference.size)
+
+    validation_reference = pd.read_csv('validation_dataset.txt', index_col=0, header=None, names=['label'])
+
+    test_reference = pd.read_csv('test_dataset.txt', index_col=0, header=None, names=['label'])
+
 
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
-
+    
     # compute 2 dictionaries for swiching between label in string or int
+
+    classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go",]
+
     classToNum = {}
     numToClass = {}
     num = 0
-
+    unknown_class = 11
     for i in list_subfolders_with_paths:
         cl = i.split("/")[-1]
-        classToNum[cl] = num
-        numToClass[num] = cl
-        num += 1
+        if cl in classes_list:      # considering one of the classes that we want to classify or a "silence" sample
+            classToNum[cl] = num
+            numToClass[num] = cl
+            num += 1
+        else:
+            classToNum[cl] = unknown_class
+
+    classToNum["silence"] = 10
+    numToClass[10] = "silence"
+    numToClass[11] = "unknown"
+
+    print(classToNum)
+    print(numToClass)
 
     # change label from string to int
     train_reference['label'] = train_reference['label'].apply(lambda l: classToNum[l])
+    #print(train_reference.iloc[0])
+
     validation_reference['label'] = validation_reference['label'].apply(lambda l: classToNum[l])
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
 
+    samples = np.zeros(12)
+    for index, row in train_reference.iterrows():
+        samples[row['label']] += 1
+        # print(element)
+        # print(element[0].shape)
+    print(samples)
 
 
+    mask = train_reference['label'].apply(lambda l: (l != 10 or np.random.rand() <= 1 / 20))
+
+    true = 0
+    for i in mask:
+        if i == True:
+            true+=1
+
+    print("kept values = ", true, "discarded values", mask.size - true)
+    train_masked_reference = train_reference[mask]
+
+    samples = np.zeros(12)
+    for index, row in train_masked_reference.iterrows():
+        samples[row['label']] += 1
+        # print(element)
+        # print(element[0].shape)
+
+    print(samples)
+
+    dataset = tf.data.Dataset.from_tensor_slices(([1, 2, 3, 2, 3, 4, 5], [10, 5, 6, 10, 10, 10, 10]))
+    dataset = dataset.cache("try1")
+    dataset = dataset.filter(lambda x, y: y != 10 or np.random.rand() <= 1 / 2)
+    print(list(dataset.as_numpy_iterator()))
+
+    file_paths = list(train_reference.index)
+    labels = train_reference['label']
+
+    dataset = tf.data.Dataset.from_tensor_slices((file_paths, labels))
+    dataset = dataset.cache("try2")
+    #mask = np.random.rand(len(file_paths)) <= 1/25
+
+    samples = np.zeros(12)
+    for i in dataset.as_numpy_iterator():
+        samples[i[1]] += 1
+        # print(element)
+        # print(element[0].shape)
+    print(samples)
+
+    dataset = dataset.map(lambda x, y:  (x, y) if(y != 10 or np.random.rand() <= 1 / 2) else (x, np.int64(-1)))
+
+    dataset = dataset.filter(lambda x, y: y != -1)
+
+    samples = np.zeros(12)
+    for i in dataset.as_numpy_iterator():
+        samples[i[1]] += 1
+        # print(element)
+        # print(element[0].shape)
+
+    print(samples)
+
+
+    
     # initialize preprocessing variables
     n_mels = 40
     window_duration = 0.025
@@ -352,42 +517,45 @@ if __name__ == '__main__':
     n_fft = int(window_duration * sample_rate)
     hop_length = int(frame_step * sample_rate)
 
-
     batch_size = 32
     # create the tensorflow dataset for train, validation and test
-    train_dataset = create_dataset(train_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, cache_file='train_cache')
-    validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, cache_file='validation_cache')
-    test_dataset = create_dataset(test_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, cache_file='test_cache')
-
+    train_dataset = create_dataset(dataset_path, train_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=True, cache_file='train_cache')
+    validation_dataset = create_dataset(dataset_path, validation_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=True, cache_file='validation_cache')
+    test_dataset = create_dataset(dataset_path, test_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=False, cache_file='test_cache')
+    
     # check how the samples in the dataset have been processed
+    samples = np.zeros(12)
     for element in train_dataset.as_numpy_iterator():
-        #print(element)
-        print(element[0].shape)
+        for i in element[1]:
+            samples[i]+=1
+        # print(element)
+        #print(element[0].shape)
 
-        #print(element[0])
+        print(samples)
+        
+        #print(element[1][0])
         plt.figure(figsize=(17, 6))
         plt.pcolormesh(element[0][0,:,:,0])
-
+    
         plt.title('Spectrogram visualization - librosa')
         plt.ylabel('Frequency')
         plt.xlabel('Time')
         plt.show()
         break
+        
 
     # Call the function to create the model and compile it
     #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
     model = modelconvNN((80, 126, 1))
     model.summary()
-
+    
     train_steps = int(np.ceil(len(train_reference) / batch_size))
     val_steps = int(np.ceil(len(validation_reference) / batch_size))
-
+    
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-
+    
     num_epochs = 30
-
+    
     # Fit the model
     history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
     model.save('my_model.h5')
-
-    #"""
