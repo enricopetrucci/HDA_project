@@ -498,6 +498,7 @@ if __name__ == '__main__':
         # print(element[0].shape)
 
     print("train masked samples statistic: ", samples)
+
     """
     dataset = tf.data.Dataset.from_tensor_slices(([1, 2, 3, 2, 3, 4, 5], [10, 5, 6, 10, 10, 10, 10]))
     dataset = dataset.cache("try1")

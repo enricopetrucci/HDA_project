@@ -133,35 +133,57 @@ if __name__ == '__main__':
 
     dataset_path = './speech_commands_v0.02/'
 
+    # fraction of the total that will be left out from the training
+    masking_fraction = 0.90
+
     # read the list for each set and select only wanted classes
-    train_reference = pd.read_csv('train_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (train_reference['label'] == 'backward') | (train_reference['label'] == 'bed')
-    train_reference = train_reference[mask]
+    train_reference = pd.read_csv('train_dataset.txt', index_col=0, header=None, names=['label'])
 
-    validation_reference = pd.read_csv('validation_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (validation_reference['label'] == 'backward') | (validation_reference['label'] == 'bed')
-    validation_reference = validation_reference[mask]
+    mask_train = np.random.rand(train_reference.size) >= masking_fraction
+    print(mask_train)
 
-    test_reference = pd.read_csv('test_dataset.csv', index_col=0, header=None, names=['label'])
-    mask = (test_reference['label'] == 'backward') | (test_reference['label'] == 'bed')
-    test_reference = test_reference[mask]
+    print("train_reference size before mask ", train_reference.size)
+    train_reference = train_reference[mask_train]
+    print("train_reference size after mask ", train_reference.size)
+
+    validation_reference = pd.read_csv('validation_dataset.txt', index_col=0, header=None, names=['label'])
+
+    test_reference = pd.read_csv('real_test_dataset.txt', index_col=0, header=None, names=['label'])
 
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
 
     # compute 2 dictionaries for swiching between label in string or int
+
+    classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
+
     classToNum = {}
     numToClass = {}
     num = 0
-
+    unknown_class = 11
     for i in list_subfolders_with_paths:
         cl = i.split("/")[-1]
-        classToNum[cl] = num
-        numToClass[num] = cl
-        num += 1
+        if cl in classes_list:  # considering one of the classes that we want to classify or a "silence" sample
+            classToNum[cl] = num
+            numToClass[num] = cl
+            num += 1
+        else:
+            classToNum[cl] = unknown_class
+
+    classToNum["silence"] = 10
+    classToNum["unknown"] = 11
+
+    numToClass[10] = "silence"
+    numToClass[11] = "unknown"
+
+    print(classToNum)
+    print(numToClass)
 
     # change label from string to int
     train_reference['label'] = train_reference['label'].apply(lambda l: classToNum[l])
+    # print(train_reference.iloc[0])
+
     validation_reference['label'] = validation_reference['label'].apply(lambda l: classToNum[l])
+
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
 
     #### Start testing the preprocessing alternatives
