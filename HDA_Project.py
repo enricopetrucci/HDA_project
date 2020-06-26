@@ -9,6 +9,7 @@ import glob
 import tensorflow as tf
 import csv
 import pandas as pd
+import seaborn as sn
 from python_speech_features import mfcc
 from python_speech_features import delta
 from python_speech_features import logfbank
@@ -120,13 +121,14 @@ def generate_train_val_test_list(dataset_path, name_train, name_val, name_test):
 
     test_set_path = './speech_commands_test_set_v0.02/'
     real_test_list = []
+
     for root, dirs, files in os.walk(test_set_path):
-        real_test_list += [root.replace(test_set_path, "") + '/' +
+        real_test_list += [root + '/' +
                          f for f in files if f.endswith('.wav')]
 
     f = open('real_'+name_test, 'w')
     for ele in real_test_list:
-        f.write(ele + "," + ele.split('/')[0] + '\n')
+        f.write(ele + "," + ele.split('/')[-2].replace("_", "") + '\n')
 
 
 def generate_silence_samples(dataset_path):
@@ -303,7 +305,7 @@ def filter_fn(x, y):
     return ((not tf.math.equal(y, 10)) or np.random.rand() < 1 / 25)
 
 
-def create_dataset(dataset_path, reference, batch_size, shuffle, window_duration, frame_step, n_mels, filter, cache_file=None):
+def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, n_mels, repeat, cache_file=None):
     """
     Create dataset and store a cached version
     :param reference: list of the path for each sample in the dataset and their class
@@ -340,7 +342,8 @@ def create_dataset(dataset_path, reference, batch_size, shuffle, window_duration
         dataset = dataset.shuffle(len(file_paths))
 
     #Repeat the dataset indefinitely
-    dataset = dataset.repeat()
+    if repeat:
+        dataset = dataset.repeat()
 
     # Batch
     dataset = dataset.batch(batch_size=batch_size)
@@ -349,6 +352,9 @@ def create_dataset(dataset_path, reference, batch_size, shuffle, window_duration
     dataset = dataset.prefetch(buffer_size=1)
 
     return dataset
+
+def clear_cache():
+    return 1
 
 
 def modelconvNN(input_shape):
@@ -389,6 +395,7 @@ def modelconvNN(input_shape):
 
 if __name__ == '__main__':
 
+    np.random.seed(0)
     dataset_path = './speech_commands_v0.02/'
 
     #generate_silence_samples(dataset_path)
@@ -407,20 +414,20 @@ if __name__ == '__main__':
     mask_train = np.random.rand(train_reference.size) >= masking_fraction
     print(mask_train)
 
-    print("train_reference size before mask ",train_reference.size)
+    print("train_reference size before mask ", train_reference.size)
     train_reference = train_reference[mask_train]
     print("train_reference size after mask ", train_reference.size)
 
     validation_reference = pd.read_csv('validation_dataset.txt', index_col=0, header=None, names=['label'])
 
-    test_reference = pd.read_csv('test_dataset.txt', index_col=0, header=None, names=['label'])
+    test_reference = pd.read_csv('real_test_dataset.txt', index_col=0, header=None, names=['label'])
 
 
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
     
     # compute 2 dictionaries for swiching between label in string or int
 
-    classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go",]
+    classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
 
     classToNum = {}
     numToClass = {}
@@ -436,6 +443,8 @@ if __name__ == '__main__':
             classToNum[cl] = unknown_class
 
     classToNum["silence"] = 10
+    classToNum["unknown"] = 11
+
     numToClass[10] = "silence"
     numToClass[11] = "unknown"
 
@@ -447,6 +456,7 @@ if __name__ == '__main__':
     #print(train_reference.iloc[0])
 
     validation_reference['label'] = validation_reference['label'].apply(lambda l: classToNum[l])
+
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
 
     samples = np.zeros(12)
@@ -454,15 +464,30 @@ if __name__ == '__main__':
         samples[row['label']] += 1
         # print(element)
         # print(element[0].shape)
-    print(samples)
+    print("train samples statistic: ", samples)
+
+    samples = np.zeros(12)
+    for index, row in validation_reference.iterrows():
+        samples[row['label']] += 1
+        # print(element)
+        # print(element[0].shape)
+    print("validation samples statistic: ", samples)
+
+    samples = np.zeros(12)
+    for index, row in test_reference.iterrows():
+        samples[row['label']] += 1
+        # print(element)
+        # print(element[0].shape)
+    print("test samples statistic: ", samples)
 
 
-    mask = train_reference['label'].apply(lambda l: (l != 10 or np.random.rand() <= 1 / 20))
+
+    mask = train_reference['label'].apply(lambda l: (l != 11 or np.random.rand() <= 1 / 19))
 
     true = 0
     for i in mask:
         if i == True:
-            true+=1
+            true += 1
 
     print("kept values = ", true, "discarded values", mask.size - true)
     train_masked_reference = train_reference[mask]
@@ -474,7 +499,7 @@ if __name__ == '__main__':
         # print(element[0].shape)
 
     print(samples)
-
+    """
     dataset = tf.data.Dataset.from_tensor_slices(([1, 2, 3, 2, 3, 4, 5], [10, 5, 6, 10, 10, 10, 10]))
     dataset = dataset.cache("try1")
     dataset = dataset.filter(lambda x, y: y != 10 or np.random.rand() <= 1 / 2)
@@ -506,6 +531,7 @@ if __name__ == '__main__':
 
     print(samples)
 
+    """
 
     
     # initialize preprocessing variables
@@ -519,9 +545,9 @@ if __name__ == '__main__':
 
     batch_size = 32
     # create the tensorflow dataset for train, validation and test
-    train_dataset = create_dataset(dataset_path, train_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=True, cache_file='train_cache')
-    validation_dataset = create_dataset(dataset_path, validation_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=True, cache_file='validation_cache')
-    test_dataset = create_dataset(dataset_path, test_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, filter=False, cache_file='test_cache')
+    train_dataset = create_dataset(train_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=True, cache_file='train_cache')
+    validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=True, cache_file='validation_cache')
+    test_dataset = create_dataset(test_reference, batch_size, shuffle=False, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=False, cache_file='test_cache')
     
     # check how the samples in the dataset have been processed
     samples = np.zeros(12)
@@ -532,11 +558,11 @@ if __name__ == '__main__':
         #print(element[0].shape)
 
         print(samples)
-        
+
         #print(element[1][0])
         plt.figure(figsize=(17, 6))
         plt.pcolormesh(element[0][0,:,:,0])
-    
+
         plt.title('Spectrogram visualization - librosa')
         plt.ylabel('Frequency')
         plt.xlabel('Time')
@@ -545,13 +571,14 @@ if __name__ == '__main__':
         
 
     # Call the function to create the model and compile it
-    #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
+    # model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
     model = modelconvNN((80, 126, 1))
     model.summary()
     
     train_steps = int(np.ceil(len(train_reference) / batch_size))
     val_steps = int(np.ceil(len(validation_reference) / batch_size))
-    
+    test_steps = int(np.ceil(len(test_reference) / batch_size))
+
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     
     num_epochs = 30
@@ -559,3 +586,34 @@ if __name__ == '__main__':
     # Fit the model
     history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
     model.save('my_model.h5')
+    model = tf.keras.models.load_model('my_model.h5')
+
+    accuracy = model.evaluate(test_dataset, steps=test_steps)
+    print("accurcy in the test_set = ", accuracy)
+
+    predictions = model.predict(test_dataset, steps=test_steps)
+
+    predictions = np.argmax(predictions, 1)
+    print(predictions.shape)
+    print(predictions[1])
+
+    real_labels = []
+    for element in test_dataset.as_numpy_iterator():
+        for i in element[1]:
+            real_labels.append(i)
+
+    cm = tf.math.confusion_matrix(real_labels, predictions)
+
+    cl = []
+    for i in range(12):
+        cl.append(numToClass[i])
+
+    #cm = pd.DataFrame(cm, index = [i for i in "ABCDEFGHIJKL"], columns = [i for i in "ABCDEFGHIJKL"])#index=[i for i in cl], columns=[i for i in cl])
+    plt.figure(figsize=(8, 5))
+    sn.heatmap(cm, annot=True)
+    sn.set(font_scale=0.8)
+    plt.title('Confusion matrix in the test set')
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+    plt.show()
