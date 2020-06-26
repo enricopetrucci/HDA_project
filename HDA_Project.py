@@ -328,7 +328,6 @@ def create_dataset(reference, batch_size, shuffle, window_duration, frame_step, 
 
     #py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_librosa, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
     py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_librosa_mel_spectrogram, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
-
     #py_func = lambda file_path, label: (tf.numpy_function(load_and_preprocess_data_python_speech_features, [file_path, n_fft, hop_length, n_mels], tf.float32), label)
 
     dataset = dataset.map(py_func, num_parallel_calls=os.cpu_count())
@@ -402,7 +401,7 @@ if __name__ == '__main__':
 
     refresh_dataset_lists = False
 
-    if(refresh_dataset_lists):
+    if refresh_dataset_lists:
         generate_train_val_test_list(dataset_path, name_train='train_dataset.txt', name_val='validation_dataset.txt', name_test='test_dataset.txt')
 
     # fraction of the total that will be left out from the training
@@ -498,7 +497,7 @@ if __name__ == '__main__':
         # print(element)
         # print(element[0].shape)
 
-    print(samples)
+    print("train masked samples statistic: ", samples)
     """
     dataset = tf.data.Dataset.from_tensor_slices(([1, 2, 3, 2, 3, 4, 5], [10, 5, 6, 10, 10, 10, 10]))
     dataset = dataset.cache("try1")
@@ -545,6 +544,7 @@ if __name__ == '__main__':
 
     batch_size = 32
     # create the tensorflow dataset for train, validation and test
+    train_masked_dataset = create_dataset(train_masked_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=True, cache_file='train_masked_cache')
     train_dataset = create_dataset(train_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=True, cache_file='train_cache')
     validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=True, cache_file='validation_cache')
     test_dataset = create_dataset(test_reference, batch_size, shuffle=False, window_duration=window_duration, frame_step=frame_step, n_mels=n_mels, repeat=False, cache_file='test_cache')
@@ -574,7 +574,8 @@ if __name__ == '__main__':
     # model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
     model = modelconvNN((80, 126, 1))
     model.summary()
-    
+
+    train_masked_steps = int(np.ceil(len(train_masked_reference) / batch_size))
     train_steps = int(np.ceil(len(train_reference) / batch_size))
     val_steps = int(np.ceil(len(validation_reference) / batch_size))
     test_steps = int(np.ceil(len(test_reference) / batch_size))
@@ -584,8 +585,13 @@ if __name__ == '__main__':
     num_epochs = 30
     
     # Fit the model
-    history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
+    history = model.fit(train_masked_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
     model.save('my_model.h5')
+
+    history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
+    model.save('my_model1.h5')
+
+
     model = tf.keras.models.load_model('my_model.h5')
 
     accuracy = model.evaluate(test_dataset, steps=test_steps)
@@ -615,5 +621,37 @@ if __name__ == '__main__':
     plt.title('Confusion matrix in the test set')
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.savefig('confusion_matrix_imbalanced_training_set.png')
+    plt.show()
 
+    model = tf.keras.models.load_model('my_model1.h5')
+
+    accuracy = model.evaluate(test_dataset, steps=test_steps)
+    print("accurcy in the test_set = ", accuracy)
+
+    predictions = model.predict(test_dataset, steps=test_steps)
+
+    predictions = np.argmax(predictions, 1)
+    print(predictions.shape)
+    print(predictions[1])
+
+    real_labels = []
+    for element in test_dataset.as_numpy_iterator():
+        for i in element[1]:
+            real_labels.append(i)
+
+    cm = tf.math.confusion_matrix(real_labels, predictions)
+
+    cl = []
+    for i in range(12):
+        cl.append(numToClass[i])
+
+    #cm = pd.DataFrame(cm, index = [i for i in "ABCDEFGHIJKL"], columns = [i for i in "ABCDEFGHIJKL"])#index=[i for i in cl], columns=[i for i in cl])
+    plt.figure(figsize=(8, 5))
+    sn.heatmap(cm, annot=True)
+    sn.set(font_scale=0.8)
+    plt.title('Confusion matrix in the test set')
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.savefig('confusion_matrix_balanced_training_set.png')
     plt.show()
