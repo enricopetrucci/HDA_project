@@ -141,7 +141,8 @@ def load_and_preprocess_data_librosa_mel_spectrogram(file_path):
         from_ = int((N / 2) - (target_size / 2))
         to_ = from_ + target_size
         y = y[from_:to_]
-
+    y = normalize_data(y)
+    #y = librosa.util.normalize(y)
     librosa_melspec = librosa.feature.melspectrogram(y=y, sr=sr, n_fft=1024,
                                                      hop_length=128, power=1.0,  # window='hann',
                                                      n_mels=80, fmin=40.0, fmax=sr / 2)
@@ -150,9 +151,9 @@ def load_and_preprocess_data_librosa_mel_spectrogram(file_path):
 
 
     S_dB = S_dB.reshape((S_dB.shape[0], S_dB.shape[1], 1))
-    S_dB = normalize_data(S_dB)
-
-    return S_dB.astype(np.float32)
+    result = normalize_data(S_dB)
+    #result = librosa.util.normalize(S_dB)
+    return result.astype(np.float32)
 
 def normalize_data(data):
     """
@@ -162,7 +163,9 @@ def normalize_data(data):
     """
     # Amplitude estimate
     norm_factor = np.percentile(data, 99) - np.percentile(data, 5)
+
     return data / norm_factor
+
 
 def filter_fn(y,):
     """
@@ -429,6 +432,7 @@ def plot_accuracy(train_accuracy, val_accuracy):
 
 if __name__ == '__main__':
     np.random.seed(0)
+    tf.random.set_seed(0)
     ######Run parameters
 
     dataset_path = './speech_commands_v0.02/'
@@ -457,7 +461,7 @@ if __name__ == '__main__':
         generate_train_val_test_list(dataset_path, name_train='train_dataset.txt', name_val='validation_dataset.txt', name_test='test_dataset.txt')
 
 
-    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train = 0.9)
+    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train = 0.5)
 
     numToClass, classToNum = generate_classes_dictionaries(dataset_path)
 
@@ -469,23 +473,23 @@ if __name__ == '__main__':
 
 
     if use_all_training_set:
-        samples, percentage = compute_dataset_statistics(train_reference)
-        print("Train samples percentage for each class: ", percentage)
-        samples, percentage = compute_dataset_statistics(validation_reference)
-        print("Validation samples percentage for each class: ", percentage)
+        samples_train, percentage_train = compute_dataset_statistics(train_reference)
+        print("Train samples percentage for each class: ", percentage_train)
+        samples_val, percentage_val = compute_dataset_statistics(validation_reference)
+        print("Validation samples percentage for each class: ", percentage_val)
 
         if partition_training_set:
-            average_sample_count_train = int(np.sum(samples) - samples[-1] + samples[-1]/unknown_used_fraction)
+            average_sample_count_train = int(np.sum(samples_train) - samples_train[-1] + samples_train[-1]/unknown_used_fraction)
             print("Average_sample_count_train considering uniform distribution among classes", average_sample_count_train)
-            percentage = samples * 100 / average_sample_count_train
-            percentage[-1] = 100*(samples[-1] / unknown_used_fraction)/average_sample_count_train
-            print("Train samples average percentage after filtering: ", percentage)
+            percentage_train = samples_train * 100 / average_sample_count_train
+            percentage_train[-1] = 100*(samples_train[-1] / unknown_used_fraction)/average_sample_count_train
+            print("Train samples average percentage after filtering: ", percentage_train)
 
 
-            average_sample_count_val = int(np.sum(samples) - samples[-1] + samples[-1] / unknown_used_fraction)
+            average_sample_count_val = int(np.sum(samples_val) - samples_val[-1] + samples_val[-1] / unknown_used_fraction)
             print("Average_sample_count_val considering uniform distribution among classes", average_sample_count_val)
-            percentage = samples*100/average_sample_count_val
-            percentage[-1] = 100*(samples[-1] / unknown_used_fraction)/average_sample_count_val
+            percentage = samples_val*100/average_sample_count_val
+            percentage[-1] = 100*(samples_val[-1] / unknown_used_fraction)/average_sample_count_val
             print("Validation samples average percentage after filtering: ", percentage)
 
     else:
