@@ -256,6 +256,230 @@ def modelconvNN(input_shape):
 
     return model
 
+def modelconvNN(input_shape):
+    """
+    :param input_shape: -- shape of the data of the dataset
+    :return: model -- a tf.keras.Model() instance
+    """
+
+    X_input = tf.keras.Input(input_shape)
+
+    X = tf.keras.layers.Conv2D(32, (8, 16), strides=(1, 4))(X_input)
+    X = BatchNormalization(axis=3,)(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool')(X)
+
+    X = tf.keras.layers.Conv2D(64, (4, 5), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool1')(X)
+
+    X = tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool2')(X)
+
+    X = tf.keras.layers.Flatten()(X)
+
+    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
+
+    # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
+
+    return model
+
+
+def modelconvNN1(input_shape):
+    """
+    :param input_shape: -- shape of the data of the dataset
+    :return: model -- a tf.keras.Model() instance
+    """
+
+    X_input = tf.keras.Input(input_shape)
+
+    X = tf.keras.layers.Conv2D(16, (3, 5), strides=(1, 2))(X_input)
+    X = BatchNormalization(axis=3,)(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool')(X)
+
+    X = tf.keras.layers.Conv2D(32, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool1')(X)
+
+    X = tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool2')(X)
+
+    X = tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool3')(X)
+
+    X = tf.keras.layers.Flatten()(X)
+
+    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
+
+    # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
+
+    return model
+
+
+def ConvSpeechModel(input_shape):
+    """
+    Base fully convolutional model for speech recognition
+    """
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))((X_input))
+    # x = Reshape((94,80)) (x) #this is strange - but now we have (batch_size,
+    # sequence, vec_dim)
+
+    c1 = tf.keras.layers.Conv2D(20, (5, 1), activation='relu', padding='same')(x)
+    c1 = tf.keras.layers.BatchNormalization()(c1)
+    p1 = tf.keras.layers.MaxPooling2D((2, 1))(c1)
+    p1 = tf.keras.layers.Dropout(0.03)(p1)
+
+    c2 = tf.keras.layers.Conv2D(40, (3, 3), activation='relu', padding='same')(p1)
+    c2 = tf.keras.layers.BatchNormalization()(c2)
+    p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
+    p2 = tf.keras.layers.Dropout(0.01)(p2)
+
+    c3 = tf.keras.layers.Conv2D(80, (3, 3), activation='relu', padding='same')(p2)
+    c3 = tf.keras.layers.BatchNormalization()(c3)
+    p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
+
+    p3 = tf.keras.layers.Flatten()(p3)
+    p3 = tf.keras.layers.Dense(64, activation='relu')(p3)
+    p3 = tf.keras.layers.Dense(32, activation='relu')(p3)
+
+    output = tf.keras.layers.Dense(12, activation='softmax')(p3)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='ConvSpeechModel')
+
+    return model
+
+
+### not working
+def AttRNNSpeechModel(input_shape, rnn_func=tf.keras.layers.LSTM):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+
+    x = tf.keras.layers.Dense(32)(x)
+
+
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModel')
+
+    return model
+
+def RNNSpeechModelOriginal(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # x = Reshape((125, 80)) (x)
+    # keras.backend.squeeze(x, axis)
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+
+    x = tf.keras.layers.Bidirectional(tf.compat.v1.keras.layers.CuDNNLSTM(64, return_sequences=True))(
+        x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(tf.compat.v1.keras.layers.CuDNNLSTM(64))(x)
+
+
+    x = tf.keras.layers.Flatten()(x)
+
+    x = tf.keras.layers.Dense(64, activation='relu')(x)
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='RNNSpeechModelOriginal')
+
+    return model
+
+
+def RNNSpeechModel(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # x = Reshape((125, 80)) (x)
+    # keras.backend.squeeze(x, axis)
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+
+    x = (tf.keras.layers.GRU(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = (tf.keras.layers.GRU(64))(x)
+
+    x = tf.keras.layers.Flatten()(x)
+
+    x = tf.keras.layers.Dense(64, activation='relu')(x)
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='RNNSpeechModel')
+
+    return model
+
 
 def import_datasets_reference(masking_fraction_train = 0):
     """
@@ -451,9 +675,11 @@ if __name__ == '__main__':
     partition_training_set = True
 
     train = True
+    
     batch_size = 32
     unknown_used_fraction = 18
     num_epochs = 30
+    masking_fraction_train = 0.5
 
     #generate_silence_samples(dataset_path)
 
@@ -461,7 +687,7 @@ if __name__ == '__main__':
         generate_train_val_test_list(dataset_path, name_train='train_dataset.txt', name_val='validation_dataset.txt', name_test='test_dataset.txt')
 
 
-    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train = 0.5)
+    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train = masking_fraction_train)
 
     numToClass, classToNum = generate_classes_dictionaries(dataset_path)
 
@@ -508,17 +734,17 @@ if __name__ == '__main__':
     # create the tensorflow dataset for train, validation and test
     if use_all_training_set:
         if partition_training_set:
-            train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=True, repeat=True, cache_file='train_cache')
+            train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=True, repeat=True, cache_file='train_cache'+str(masking_fraction_train))
             validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, filter=True, repeat=False, cache_file='validation_cache')
         else:
             #the same cached datsets can be used, since the filter is only applied during training, after caching
             train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
-                                           cache_file='train_cache')
+                                           cache_file='train_cache'+str(masking_fraction_train))
             validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
                                                 filter=False, repeat=False, cache_file='validation_cache')
     else:
         train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
-                                       cache_file='train_cache_masked')
+                                       cache_file='train_cache_masked'+str(masking_fraction_train))
         validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
                                             filter=False, repeat=False, cache_file='validation_cache_masked')
 
@@ -538,7 +764,12 @@ if __name__ == '__main__':
 
     # Call the function to create the model and compile it
     # model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
-    model = modelconvNN((80, 126, 1))
+    #model = ConvSpeechModel((80, 126, 1))
+    model = RNNSpeechModelOriginal((80, 126, 1))
+    #model = AttRNNSpeechModel((80, 126, 1))
+
+
+    #model = modelconvNN1((80, 126, 1))
     model.summary()
 
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])

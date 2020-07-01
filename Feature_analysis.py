@@ -293,7 +293,8 @@ if __name__ == '__main__':
     y = y.reshape((-1, 1, 16000))
     print(y.shape)
     melspec = melspecModel.predict(y)
-    print(melspec.shape)
+    print("Kapre result ", melspec.shape)
+
 
     plt.figure(figsize=(5, 3))
     plt.pcolormesh(melspec[0,:,:,0])
