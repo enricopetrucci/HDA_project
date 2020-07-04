@@ -16,3 +16,9 @@
 *.index
 *.data-00000-of-00001
 /my_model1.h5
+/HDA_Project_backup.py
+/confusion_matrix_balanced_training_set_AttRNNSpeechModel_0.7.png
+/confusion_matrix_balanced_training_set_RNNSpeechModel_0.7.png
+/confusion_matrix_truncated_training_set_RNNSpeechModel_0.7.png
+/HDA_ProjectCluster.py
+/Recurrent_NN_job.slurm

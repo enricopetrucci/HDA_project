@@ -350,7 +350,7 @@ def create_dataset(reference, batch_size, shuffle, filter, repeat, cache_file=No
         dataset = dataset.repeat()
 
     # Batch
-    dataset = dataset.batch(batch_size=batch_size)
+    dataset = dataset.batch(batch_size=batch_size)#, drop_remainder=True)
 
     # Prefetch
     dataset = dataset.prefetch(buffer_size=1)
@@ -594,9 +594,9 @@ def RNNSpeechModel(input_shape):
 
     x = tf.keras.layers.Permute((2, 1, 3))(X_input)
 
-    x = tf.keras.layers.Conv2D(10, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(10, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(1, (5, 1), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
     # x = Reshape((125, 80)) (x)
@@ -618,7 +618,7 @@ def RNNSpeechModel(input_shape):
     return model
 
 
-def import_datasets_reference(masking_fraction_train = 0):
+def import_datasets_reference(masking_fraction_train = 0.0):
     """
     Read the file containing the lists for the train, validation and test set.
     :param masking_fraction_train: fraction of training samples that
@@ -656,7 +656,7 @@ def generate_classes_dictionaries(dataset_path):
     :return: the 2 dictionaries
     """
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
-
+    list_subfolders_with_paths.sort()
     # compute 2 dictionaries for swiching between label in string or int
 
     classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
@@ -794,6 +794,9 @@ def plot_accuracy(train_accuracy, val_accuracy):
 if __name__ == '__main__':
     np.random.seed(0)
     tf.random.set_seed(0)
+    # gpu_devices = tf.config.experimental.list_physical_devices('GPU')
+    # for device in gpu_devices:
+    #     tf.config.experimental.set_memory_growth(device, True)
     ######Run parameters
 
     dataset_path = './speech_commands_v0.02/'
@@ -816,7 +819,7 @@ if __name__ == '__main__':
     batch_size = 32
     unknown_used_fraction = 18
     num_epochs = 30
-    masking_fraction_train = 0.5
+    masking_fraction_train = 0.7
 
     #generate_silence_samples(dataset_path)
 
@@ -883,7 +886,7 @@ if __name__ == '__main__':
         train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
                                        cache_file='train_cache_masked'+str(masking_fraction_train))
         validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
-                                            filter=False, repeat=False, cache_file='validation_cache_masked')
+                                            filter=False, repeat=True, cache_file='validation_cache_masked')
 
     test_dataset = create_dataset(test_reference, batch_size, shuffle=False, filter=False, repeat=False, cache_file='test_cache')
     
@@ -900,10 +903,10 @@ if __name__ == '__main__':
         
 
     # Call the function to create the model and compile it
-    # model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
+    #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
     #model = ConvSpeechModel((80, 126, 1))
-    model = RNNSpeechModelOriginal((80, 126, 1))
-    #model = AttRNNSpeechModel((80, 126, 1))
+    #model = RNNSpeechModelOriginal((80, 126, 1))
+    model = AttRNNSpeechModel((80, 126, 1))
 
 
     #model = modelconvNN1((80, 126, 1))
@@ -929,7 +932,8 @@ if __name__ == '__main__':
                 plot_loss(history.history['loss'], history.history['val_loss'])
                 plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
 
-                model.save('ModelEntireDatasetPartitioned.h5')
+                model.save('ModelEntireDatasetPartitioned_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
             else:
                 train_steps = int(np.ceil(len(train_reference) / batch_size))
                 val_steps = int(np.ceil(len(validation_reference) / batch_size))
@@ -943,11 +947,12 @@ if __name__ == '__main__':
                 plot_loss(history.history['loss'], history.history['val_loss'])
                 plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
 
-                model.save('ModelEntireDataset.h5')
+                model.save('ModelEntireDataset_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
 
         else:
             train_steps = int(np.ceil(len(train_reference) / batch_size))
-            val_steps = int(np.ceil(len(train_reference) / batch_size))
+            val_steps = int(np.ceil(len(validation_reference) / batch_size))
 
             print("train_steps ", train_steps)
             print("validation_steps ", val_steps)
@@ -958,26 +963,33 @@ if __name__ == '__main__':
             plot_loss(history.history['loss'], history.history['val_loss'])
             plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
 
-            model.save('ModelPartialDataset.h5')
+            model.save('ModelPartialDataset_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
 
 
     # analyze results by plotting confusion matrix
     if use_all_training_set:
         if partition_training_set:
-            model = tf.keras.models.load_model('ModelEntireDatasetPartitioned.h5')
+            model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
             accuracy = model.evaluate(test_dataset, steps=test_steps)
             print("Accuracy in the test_set model trained with all the unknown samples, partitioned= ", accuracy)
             predictions = model.predict(test_dataset, steps=test_steps)
-            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_balanced_training_set.png')
+            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_balanced_training_set_' +
+                                  model.name + '_' + str(masking_fraction_train) + '.png')
         else:
-            model = tf.keras.models.load_model('ModelEntireDataset.h5')
+            model = tf.keras.models.load_model('ModelEntireDataset_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
             accuracy = model.evaluate(test_dataset, steps=test_steps)
             print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
             predictions = model.predict(test_dataset, steps=test_steps)
-            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_entire_training_set.png')
+            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_entire_training_set_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.png')
     else:
-        model = tf.keras.models.load_model('ModelPartialDataset.h5')
+        model = tf.keras.models.load_model('ModelPartialDataset_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.h5')
         accuracy = model.evaluate(test_dataset, steps=test_steps)
         print("Accuracy in the test_set using only subset of unknown samples= ", accuracy)
         predictions = model.predict(test_dataset, steps=test_steps)
-        plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_truncated_training_set.png')
+        plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_truncated_training_set_' +
+                                  model.name + '_'+str(masking_fraction_train) + '.png')
