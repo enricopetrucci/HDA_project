@@ -657,7 +657,7 @@ def Res8SpeechModel(input_shape):
     x = tf.keras.layers.Flatten()(x)
     output = tf.keras.layers.Dense(12, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8')
 
     return model
 
@@ -691,7 +691,7 @@ def Res8SpeechModel_narrow(input_shape):
     x = tf.keras.layers.Flatten()(x)
     output = tf.keras.layers.Dense(12, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8_narrow')
 
     return model
 
@@ -765,7 +765,7 @@ def Res15SpeechModel_narrow(input_shape):
     x = tf.keras.layers.Flatten()(x)
     output = tf.keras.layers.Dense(12, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15_narrow')
 
     return model
 
@@ -813,55 +813,7 @@ def Res26SpeechModel(input_shape):
     x = tf.keras.layers.Flatten()(x)
     output = tf.keras.layers.Dense(12, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
-
-    return model
-
-# res26
-def Res26SpeechModel(input_shape):
-
-    X_input = tf.keras.Input(input_shape)
-
-    # Convolutional layer (3, 3, 19)
-    x = tf.keras.layers.Conv2D(45, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
-    x = tf.keras.layers.BatchNormalization()(x)
-
-    # Average pooling layer
-    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
-
-    # Res layer x 12
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=0, stride=2)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=1, stride=2)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=2, stride=2)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=3, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=4, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=5, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=6, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=7, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=8, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=9, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=10, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-    x = convolutional_block(x, filters=[45, 45], stage=0, num=11, stride=1)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
-
-    # Average pooling layer
-    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
-
-    x = tf.keras.layers.Flatten()(x)
-    output = tf.keras.layers.Dense(12, activation='softmax')(x)
-
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res26')
 
     return model
 
@@ -909,7 +861,7 @@ def Res26SpeechModel_narrow(input_shape):
     x = tf.keras.layers.Flatten()(x)
     output = tf.keras.layers.Dense(12, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res26_narrow')
 
     return model
 
