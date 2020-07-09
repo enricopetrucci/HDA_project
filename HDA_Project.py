@@ -15,8 +15,9 @@ from python_speech_features import delta
 from python_speech_features import logfbank
 import scipy.io.wavfile as wav
 import matplotlib.pyplot as plt
+import math
 
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 from tensorflow.keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D
 from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
 
@@ -357,8 +358,8 @@ def create_dataset(reference, batch_size, shuffle, filter, repeat, cache_file=No
 
     return dataset
 
-
-def modelconvNN(input_shape):
+# first model not very useful
+def modelconvNN(input_shape, classes):
     """
     :param input_shape: -- shape of the data of the dataset
     :return: model -- a tf.keras.Model() instance
@@ -386,14 +387,15 @@ def modelconvNN(input_shape):
 
     X = tf.keras.layers.Flatten()(X)
 
-    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
+    X = tf.keras.layers.Dense(classes, activation='softmax', name='fc2')(X)
 
     # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
-    model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='modelconvNN')
 
     return model
 
-def modelconvNN(input_shape):
+
+def modelconvNN1(input_shape, classes):
     """
     :param input_shape: -- shape of the data of the dataset
     :return: model -- a tf.keras.Model() instance
@@ -401,77 +403,43 @@ def modelconvNN(input_shape):
 
     X_input = tf.keras.Input(input_shape)
 
-    X = tf.keras.layers.Conv2D(32, (8, 16), strides=(1, 4))(X_input)
-    X = BatchNormalization(axis=3,)(X)
+    X = tf.keras.layers.Conv2D(16, (3, 3), strides=(1, 2))(X_input)
+    X = BatchNormalization()(X)
     X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = tf.keras.layers.SpatialDropout2D(0.1)(X)
     X = MaxPooling2D((2, 2), name='max_pool')(X)
 
-    X = tf.keras.layers.Conv2D(64, (4, 5), strides=(1, 1))(X)
-    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Conv2D(16, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization()(X)
     X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = tf.keras.layers.SpatialDropout2D(0.1)(X)
     X = MaxPooling2D((2, 2), name='max_pool1')(X)
-
-    X = tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1))(X)
-    X = BatchNormalization(axis=3, )(X)
-    X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
-    X = MaxPooling2D((2, 2), name='max_pool2')(X)
-
-    X = tf.keras.layers.Flatten()(X)
-
-    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
-
-    # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
-    model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
-
-    return model
-
-
-def modelconvNN1(input_shape):
-    """
-    :param input_shape: -- shape of the data of the dataset
-    :return: model -- a tf.keras.Model() instance
-    """
-
-    X_input = tf.keras.Input(input_shape)
-
-    X = tf.keras.layers.Conv2D(16, (3, 5), strides=(1, 2))(X_input)
-    X = BatchNormalization(axis=3,)(X)
-    X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
-    X = MaxPooling2D((2, 2), name='max_pool')(X)
 
     X = tf.keras.layers.Conv2D(32, (3, 3), strides=(1, 1))(X)
-    X = BatchNormalization(axis=3, )(X)
+    X = BatchNormalization()(X)
     X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
-    X = MaxPooling2D((2, 2), name='max_pool1')(X)
-
-    X = tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1))(X)
-    X = BatchNormalization(axis=3, )(X)
-    X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = tf.keras.layers.SpatialDropout2D(0.1)(X)
     X = MaxPooling2D((2, 2), name='max_pool2')(X)
 
-    X = tf.keras.layers.Conv2D(128, (3, 3), strides=(1, 1))(X)
-    X = BatchNormalization(axis=3, )(X)
+    X = tf.keras.layers.Conv2D(24, (3, 3), strides=(1, 1))(X)
+    X = BatchNormalization()(X)
     X = tf.keras.layers.Activation('relu')(X)
-    X = tf.keras.layers.SpatialDropout2D(0.2)(X)
-    X = MaxPooling2D((2, 2), name='max_pool3')(X)
+    X = tf.keras.layers.SpatialDropout2D(0.1)(X)
+    #X = MaxPooling2D((2, 2), name='max_pool3')(X)
 
     X = tf.keras.layers.Flatten()(X)
 
-    X = tf.keras.layers.Dense(12, activation='softmax', name='fc2')(X)
+    X = tf.keras.layers.Dense(64, activation='relu', name='dense')(X)
+
+    X = tf.keras.layers.Dense(classes, activation='softmax', name='fc2')(X)
 
     # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
-    model = tf.keras.Model(inputs=X_input, outputs=X, name='MyModel')
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='modelconvNN1')
 
     return model
 
-
-def ConvSpeechModel(input_shape):
+# convolutional neural network from the paper
+def ConvSpeechModel(input_shape, classes):
     """
     Base fully convolutional model for speech recognition
     """
@@ -503,15 +471,15 @@ def ConvSpeechModel(input_shape):
     p3 = tf.keras.layers.Dense(64, activation='relu')(p3)
     p3 = tf.keras.layers.Dense(32, activation='relu')(p3)
 
-    output = tf.keras.layers.Dense(12, activation='softmax')(p3)
+    output = tf.keras.layers.Dense(classes, activation='softmax')(p3)
 
     model = tf.keras.Model(inputs=[X_input], outputs=[output], name='ConvSpeechModel')
 
     return model
 
-
-### not working
-def AttRNNSpeechModel(input_shape, rnn_func=tf.keras.layers.LSTM):
+# original model from paper
+# 12_cl: 0.9439672827720642  0.9359918236732483
+def AttRNNSpeechModel(input_shape, classes, rnn_func=tf.keras.layers.LSTM):
 
     X_input = tf.keras.Input(input_shape)
 
@@ -544,13 +512,196 @@ def AttRNNSpeechModel(input_shape, rnn_func=tf.keras.layers.LSTM):
     x = tf.keras.layers.Dense(32)(x)
 
 
-    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
     model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModel')
 
     return model
 
-def RNNSpeechModelOriginal(input_shape):
+#940490 0.9413087964057922
+def AttRNNSpeechModellite(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(32,  return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(64)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelite')
+
+    return model
+
+#25K parameters lightest but well regularized
+# 12_cl whole dataset 0.9588956832885742
+# 12_cl 0.952965259552002
+# 35_cl 0.9362108111381531
+def AttRNNSpeechModelLightest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.1)(x)
+
+    x = tf.keras.layers.BatchNormalization()(x)
+    # x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    # x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    #x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(64)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelLightest')
+
+    return model
+
+# 155K parameters best accuracy for 12_cl
+#12_cl 0.9527607560157776, 0.956646203994751 0.9597136974334717
+def AttRNNSpeechModelaccuracybest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelbest2')
+
+    return model
+
+# around 80K parameters a good compromise between light and accurate
+# 12_cl 0.95030677318573 0.947852790355
+def AttRNNSpeechModellitebest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x) # since we only have one filter the output is back to being a single image
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    #x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelitebest')
+
+    return model
+
+
+# From the paper, poor accuracy, not useful
+def RNNSpeechModel(input_shape, classes):
 
     X_input = tf.keras.Input(input_shape)
 
@@ -578,47 +729,44 @@ def RNNSpeechModelOriginal(input_shape):
     x = tf.keras.layers.Dense(64, activation='relu')(x)
     x = tf.keras.layers.Dense(32, activation='relu')(x)
 
-    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
     model = tf.keras.Model(inputs=[X_input], outputs=[output], name='RNNSpeechModelOriginal')
 
     return model
 
 
-def RNNSpeechModel(input_shape):
+# not working properly, poor results
+def cnn_trad_fpool3(input_shape, classes):
 
     X_input = tf.keras.Input(input_shape)
 
-    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
-    # we would rather have it the other way around for LSTMs
+    X = tf.keras.layers.Conv2D(16, (20, 8), strides=(1, 1))(X_input)
+    X = BatchNormalization()(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    #X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 6), name='max_pool')(X)
 
-    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+    X = tf.keras.layers.Conv2D(32, (10, 4), strides=(1, 1))(X)
+    X = BatchNormalization()(X)
+    X = tf.keras.layers.Activation('relu')(X)
+    #X = tf.keras.layers.SpatialDropout2D(0.2)(X)
+    X = MaxPooling2D((2, 2), name='max_pool1')(X)
 
-    x = tf.keras.layers.Conv2D(10, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
 
-    # x = Reshape((125, 80)) (x)
-    # keras.backend.squeeze(x, axis)
-    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    X = tf.keras.layers.Flatten()(X)
 
-    x = (tf.keras.layers.GRU(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = (tf.keras.layers.GRU(64))(x)
+    X = tf.keras.layers.Dense(128, activity_regularizer = tf.keras.regularizers.l2(1e-5), activation='relu', name='fc2')(X)
 
-    x = tf.keras.layers.Flatten()(x)
+    X = tf.keras.layers.Dense(classes, activity_regularizer = tf.keras.regularizers.l2(1e-5), activation='softmax', name='fc3')(X)
 
-    x = tf.keras.layers.Dense(64, activation='relu')(x)
-    x = tf.keras.layers.Dense(32, activation='relu')(x)
-
-    output = tf.keras.layers.Dense(12, activation='softmax')(x)
-
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='RNNSpeechModel')
+    # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='cnn_trad_fpool3')
 
     return model
 
 
-def import_datasets_reference(masking_fraction_train = 0.0):
+def import_datasets_reference(masking_fraction_train = 0.0, task_selected="12_cl"):
     """
     Read the file containing the lists for the train, validation and test set.
     :param masking_fraction_train: fraction of training samples that
@@ -641,14 +789,17 @@ def import_datasets_reference(masking_fraction_train = 0.0):
     validation_reference = pd.read_csv('validation_dataset.txt', index_col=0, header=None, names=['label'])
 
     print("Validation_reference size: ", validation_reference.size)
-
-    test_reference = pd.read_csv('real_test_dataset.txt', index_col=0, header=None, names=['label'])
-    print("test_reference size: ", test_reference.size)
+    if task_selected == "12_cl":
+        test_reference = pd.read_csv('real_test_dataset.txt', index_col=0, header=None, names=['label'])
+        print("test_reference size: ", test_reference.size)
+    elif task_selected == "35_cl":
+        test_reference = pd.read_csv('test_dataset.txt', index_col=0, header=None, names=['label'])
+        print("test_reference size: ", test_reference.size)
 
     return train_reference, validation_reference, test_reference
 
 
-def generate_classes_dictionaries(dataset_path):
+def generate_classes_dictionaries(dataset_path, task_selected):
     """
     Compute 2 dictionaries that associate the relative
     number of the class with the class name and vice versa
@@ -658,27 +809,38 @@ def generate_classes_dictionaries(dataset_path):
     list_subfolders_with_paths = [f.path for f in os.scandir(dataset_path) if f.is_dir()]
     list_subfolders_with_paths.sort()
     # compute 2 dictionaries for swiching between label in string or int
+    if task_selected == "12_cl":
+        classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
 
-    classes_list = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
+        classToNum = {}
+        numToClass = {}
+        num = 0
+        unknown_class = 11
+        for i in list_subfolders_with_paths:
+            cl = i.split("/")[-1]
+            if cl in classes_list:  # considering one of the classes that we want to classify or a "silence" sample
+                classToNum[cl] = num
+                numToClass[num] = cl
+                num += 1
+            else:
+                classToNum[cl] = unknown_class
 
-    classToNum = {}
-    numToClass = {}
-    num = 0
-    unknown_class = 11
-    for i in list_subfolders_with_paths:
-        cl = i.split("/")[-1]
-        if cl in classes_list:  # considering one of the classes that we want to classify or a "silence" sample
-            classToNum[cl] = num
-            numToClass[num] = cl
-            num += 1
-        else:
-            classToNum[cl] = unknown_class
+        classToNum["silence"] = 10
+        classToNum["unknown"] = 11
 
-    classToNum["silence"] = 10
-    classToNum["unknown"] = 11
+        numToClass[10] = "silence"
+        numToClass[11] = "unknown"
 
-    numToClass[10] = "silence"
-    numToClass[11] = "unknown"
+    elif task_selected == "35_cl":
+        classToNum = {}
+        numToClass = {}
+        num = 0
+        for i in list_subfolders_with_paths:
+            cl = i.split("/")[-1]
+            if cl != '_background_noise_':  # considering one of the classes that we want to classify or a "silence" sample
+                classToNum[cl] = num
+                numToClass[num] = cl
+                num += 1
 
     print(classToNum)
     print(numToClass)
@@ -686,13 +848,13 @@ def generate_classes_dictionaries(dataset_path):
 
 
 
-def compute_dataset_statistics(dataset_reference):
+def compute_dataset_statistics(dataset_reference, classes):
     """
     compute percentage and number of samples for each class inside a panda dataframe
     :param dataset_reference: panda dataframe
     :return: number of samples and percentage for each class
     """
-    samples = np.zeros(12)
+    samples = np.zeros(classes)
     for index, row in dataset_reference.iterrows():
         samples[row['label']] += 1
 
@@ -719,7 +881,7 @@ def remove_excessive_samples(dataset_reference, unknown_used_fraction):
     return dataset_reference[mask]
 
 
-def plot_confusion_matrix(predictions, test_dataset, accuracy, save=None):
+def plot_confusion_matrix(predictions, test_dataset, accuracy, classes, save=None):
     """
     Compute and plot the confusion matrix
     :param predictions: prediction computed thanks to the model
@@ -738,13 +900,13 @@ def plot_confusion_matrix(predictions, test_dataset, accuracy, save=None):
     cm = confusion_matrix(real_labels, predictions, normalize='true')
 
     cl = []
-    for i in range(12):
+    for i in range(classes):
         cl.append(numToClass[i].capitalize())
 
     cm = pd.DataFrame(cm, index=[i for i in cl],
                          columns=[i for i in cl])
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(16, 10))
     sn.heatmap(cm, annot=True)
     sn.set(font_scale=0.8)
     plt.title('Confusion matrix in the test set, overall accuracy = ' + str(accuracy))
@@ -790,13 +952,85 @@ def plot_accuracy(train_accuracy, val_accuracy):
     plt.tight_layout()
     plt.show()
 
+def lr_scheduler_linear(epoch, lr):
+    decay_rate = 0.2
+    decay_step = 2
+    if epoch % decay_step == 0 and epoch:
+        print(lr*decay_rate)
+        return lr * decay_rate
+    print(lr)
+    return lr
+
+
+def lr_scheduler_exp(epoch, lr):
+    initial_lr= 0.01
+    k = 0.1
+    lr = initial_lr * np.exp(-k*epoch)
+    return lr
+
+
+def step_decay(epoch):
+    initial_lrate = 0.001
+    drop = 0.4
+    epochs_drop = 15.0
+    lrate = initial_lrate * math.pow(drop,
+                                     math.floor((1 + epoch) / epochs_drop))
+
+    if (lrate < 4e-5):
+        lrate = 4e-5
+
+    print('Changing learning rate to {}'.format(lrate))
+    return lrate
+
+
+def plot_roc(predictions, test_dataset):
+
+
+    real_labels = np.empty((0,12))
+
+    for element in test_dataset.as_numpy_iterator():
+        for i in element[1]:
+            one_hot = np.zeros(12)
+            one_hot[i] = 1
+            real_labels = np.vstack((real_labels,one_hot))
+
+
+    print(real_labels.shape)
+    print("real_labels = ",real_labels)
+    print("predictions = ",predictions)
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(12):
+        fpr[i], tpr[i], _ = roc_curve(real_labels[:, i], predictions[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["micro"], tpr["micro"], _ = roc_curve(real_labels.ravel(), predictions.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+    plt.figure()
+    lw = 2
+    plt.plot(fpr["micro"], 1-tpr["micro"], color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[2])
+    plt.xlim([0.0, 0.09])
+    plt.ylim([0.0, 0.40])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('False Negative Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="upper right")
+    plt.show()
 
 if __name__ == '__main__':
     np.random.seed(0)
     tf.random.set_seed(0)
-    # gpu_devices = tf.config.experimental.list_physical_devices('GPU')
-    # for device in gpu_devices:
-    #     tf.config.experimental.set_memory_growth(device, True)
+
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    config.log_device_placement = True
+
+    sess = tf.compat.v1.Session(config=config)
+    tf.compat.v1.keras.backend.set_session(sess)
+
     ######Run parameters
 
     dataset_path = './speech_commands_v0.02/'
@@ -818,8 +1052,15 @@ if __name__ == '__main__':
     
     batch_size = 32
     unknown_used_fraction = 18
-    num_epochs = 30
-    masking_fraction_train = 0.7
+    num_epochs = 40
+    masking_fraction_train = 0.5
+
+    task_selected = "12_cl" # "35_cl"#
+
+    if task_selected == "12_cl":
+        classes = 12
+    elif task_selected == "35_cl":
+        classes = 35
 
     #generate_silence_samples(dataset_path)
 
@@ -827,9 +1068,19 @@ if __name__ == '__main__':
         generate_train_val_test_list(dataset_path, name_train='train_dataset.txt', name_val='validation_dataset.txt', name_test='test_dataset.txt')
 
 
-    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train = masking_fraction_train)
+    train_reference, validation_reference, test_reference = import_datasets_reference(masking_fraction_train=masking_fraction_train, task_selected=task_selected)
 
-    numToClass, classToNum = generate_classes_dictionaries(dataset_path)
+    print(train_reference.size)
+    if task_selected == "35_cl":
+        mask = train_reference["label"] != "silence"
+        train_reference = train_reference[mask]
+        mask = validation_reference["label"] != "silence"
+        validation_reference = validation_reference[mask]
+        mask = test_reference["label"] != "silence"
+        test_reference = test_reference[mask]
+    print(train_reference.size)
+
+    numToClass, classToNum = generate_classes_dictionaries(dataset_path, task_selected)
 
 
     # change label from string to int
@@ -838,13 +1089,13 @@ if __name__ == '__main__':
     test_reference['label'] = test_reference['label'].apply(lambda l: classToNum[l])
 
 
-    if use_all_training_set:
-        samples_train, percentage_train = compute_dataset_statistics(train_reference)
+    if use_all_training_set or task_selected == "35_cl":
+        samples_train, percentage_train = compute_dataset_statistics(train_reference, classes)
         print("Train samples percentage for each class: ", percentage_train)
-        samples_val, percentage_val = compute_dataset_statistics(validation_reference)
+        samples_val, percentage_val = compute_dataset_statistics(validation_reference, classes)
         print("Validation samples percentage for each class: ", percentage_val)
 
-        if partition_training_set:
+        if partition_training_set and task_selected == "12_cl":
             average_sample_count_train = int(np.sum(samples_train) - samples_train[-1] + samples_train[-1]/unknown_used_fraction)
             print("Average_sample_count_train considering uniform distribution among classes", average_sample_count_train)
             percentage_train = samples_train * 100 / average_sample_count_train
@@ -860,36 +1111,45 @@ if __name__ == '__main__':
 
     else:
         train_reference = remove_excessive_samples(train_reference, unknown_used_fraction)
-        samples = compute_dataset_statistics(train_reference)
+        samples = compute_dataset_statistics(train_reference, classes)
         print("train masked samples statistic: ", samples)
 
         validation_reference = remove_excessive_samples(validation_reference, unknown_used_fraction)
-        samples = compute_dataset_statistics(validation_reference)
+        samples = compute_dataset_statistics(validation_reference, classes)
         print("validation masked samples statistic: ", samples)
 
-    samples = compute_dataset_statistics(test_reference)
+    samples = compute_dataset_statistics(test_reference, classes)
     print("Test samples statistic: ", samples)
 
 
     # create the tensorflow dataset for train, validation and test
-    if use_all_training_set:
-        if partition_training_set:
-            train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=True, repeat=True, cache_file='train_cache'+str(masking_fraction_train))
-            validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, filter=True, repeat=False, cache_file='validation_cache')
+    if task_selected == "12_cl":
+        if use_all_training_set:
+            if partition_training_set:
+                train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=True, repeat=True,
+                                               cache_file=('train_cache' + str(masking_fraction_train)+task_selected))
+                validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True, filter=True,
+                                                     repeat=False, cache_file='validation_cache'+task_selected)
+            else:
+                # the same cached datsets can be used, since the filter is only applied during training, after caching
+                train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
+                                               cache_file='train_cache' + str(masking_fraction_train)+task_selected)
+                validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
+                                                    filter=False, repeat=False, cache_file='validation_cache'+task_selected)
         else:
-            #the same cached datsets can be used, since the filter is only applied during training, after caching
             train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
-                                           cache_file='train_cache'+str(masking_fraction_train))
+                                           cache_file='train_cache_masked' + str(masking_fraction_train)+task_selected)
             validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
-                                                filter=False, repeat=False, cache_file='validation_cache')
-    else:
-        train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
-                                       cache_file='train_cache_masked'+str(masking_fraction_train))
-        validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
-                                            filter=False, repeat=True, cache_file='validation_cache_masked')
+                                                filter=False, repeat=True, cache_file='validation_cache_masked'+task_selected)
 
-    test_dataset = create_dataset(test_reference, batch_size, shuffle=False, filter=False, repeat=False, cache_file='test_cache')
-    
+    elif task_selected == "35_cl":
+        train_dataset = create_dataset(train_reference, batch_size, shuffle=True, filter=False, repeat=True,
+                                       cache_file='train_cache' + str(masking_fraction_train) + task_selected)
+        validation_dataset = create_dataset(validation_reference, batch_size, shuffle=True,
+                                            filter=False, repeat=False, cache_file='validation_cache' + task_selected)
+
+    test_dataset = create_dataset(test_reference, batch_size, shuffle=False, filter=False, repeat=False, cache_file='test_cache'+task_selected)
+
     # check how the samples in the dataset have been processed
     for element in train_dataset.as_numpy_iterator():
         plt.figure(figsize=(17, 6))
@@ -900,96 +1160,135 @@ if __name__ == '__main__':
         plt.colorbar()
         plt.show()
         break
-        
+
 
     # Call the function to create the model and compile it
     #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
-    #model = ConvSpeechModel((80, 126, 1))
-    #model = RNNSpeechModelOriginal((80, 126, 1))
-    model = AttRNNSpeechModel((80, 126, 1))
+    #model = modelconvNN1((80, 126, 1), classes)
+    #model = ConvSpeechModel((80, 126, 1), classes)
+    #model = RNNSpeechModelOriginal((80, 126, 1), classes)
+    #model = AttRNNSpeechModel((80, 126, 1), classes)
+    #model = AttRNNSpeechModel1((80, 126, 1), classes)
+    #model = AttRNNSpeechModellite((80, 126, 1), classes)
+    model = AttRNNSpeechModelLightest((80, 126, 1), classes)
+    #model = AttRNNSpeechModelaccuracybest((80, 126, 1), classes)
+    #model = AttRNNSpeechModellitebest((80, 126, 1), classes)
+    #model = AttRNNSpeechModel((80, 126, 1), classes)
+    #model = cnn_trad_fpool3((80, 126, 1), classes)
 
-
-    #model = modelconvNN1((80, 126, 1))
     model.summary()
-
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     test_steps = int(np.ceil(len(test_reference) / batch_size))
-
+    #model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' + model.name + '_' + str(masking_fraction_train) + '.h5')
     # train model and plot accuracy and loss behavior for training and validation sets at each epoch
     if train:
-        if use_all_training_set:
-            if partition_training_set:
-                steps_per_epoch_train = int(average_sample_count_train / batch_size)
-                steps_per_epoch_val = int(average_sample_count_val / batch_size)
+        my_callbacks = [
+            tf.keras.callbacks.EarlyStopping(patience=10, monitor="val_loss", restore_best_weights=True),
+            #tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5'),
+            #tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+            tf.keras.callbacks.LearningRateScheduler(step_decay, verbose=0)
+        ]
 
-                print("steps_per_epoch_train ", steps_per_epoch_train)
-                print("steps_per_epoch_val ", steps_per_epoch_val)
+        if task_selected == "12_cl":
+            if use_all_training_set:
+                if partition_training_set:
+                    steps_per_epoch_train = int(average_sample_count_train / batch_size)
+                    steps_per_epoch_val = int(average_sample_count_val / batch_size)
 
-                history = model.fit(train_dataset, verbose=1, epochs=num_epochs, steps_per_epoch=steps_per_epoch_train,
-                                    validation_data=validation_dataset, validation_steps=steps_per_epoch_val)
+                    print("steps_per_epoch_train ", steps_per_epoch_train)
+                    print("steps_per_epoch_val ", steps_per_epoch_val)
 
-                plot_loss(history.history['loss'], history.history['val_loss'])
-                plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
+                    history = model.fit(train_dataset, verbose=1, epochs=num_epochs, steps_per_epoch=steps_per_epoch_train,
+                                        validation_data=validation_dataset, validation_steps=steps_per_epoch_val,callbacks=my_callbacks)
 
-                model.save('ModelEntireDatasetPartitioned_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
+                    plot_loss(history.history['loss'], history.history['val_loss'])
+                    plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
+
+                    model.save('ModelEntireDatasetPartitioned_' +
+                                      model.name + '_'+str(masking_fraction_train) + task_selected + '.h5')
+                else:
+                    train_steps = int(np.ceil(len(train_reference) / batch_size))
+                    val_steps = int(np.ceil(len(validation_reference) / batch_size))
+
+                    print("steps_per_epoch_train ", train_steps)
+                    print("steps_per_epoch_val ", val_steps)
+
+                    history = model.fit(train_dataset, verbose=1, epochs=num_epochs, steps_per_epoch=train_steps,
+                                        validation_data=validation_dataset, validation_steps=val_steps, callbacks=my_callbacks)
+
+                    plot_loss(history.history['loss'], history.history['val_loss'])
+                    plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
+
+                    model.save('ModelEntireDataset_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.h5')
+
             else:
                 train_steps = int(np.ceil(len(train_reference) / batch_size))
                 val_steps = int(np.ceil(len(validation_reference) / batch_size))
 
-                print("steps_per_epoch_train ", train_steps)
-                print("steps_per_epoch_val ", val_steps)
+                print("train_steps ", train_steps)
+                print("validation_steps ", val_steps)
 
-                history = model.fit(train_dataset, verbose=1, epochs=num_epochs, steps_per_epoch=train_steps,
-                                    validation_data=validation_dataset, validation_steps=val_steps)
+                # Fit the model
+                history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
 
                 plot_loss(history.history['loss'], history.history['val_loss'])
                 plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
 
-                model.save('ModelEntireDataset_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
+                model.save('ModelPartialDataset_' +
+                                      model.name + '_'+str(masking_fraction_train) + task_selected + '.h5')
 
-        else:
+        elif task_selected == "35_cl":
             train_steps = int(np.ceil(len(train_reference) / batch_size))
             val_steps = int(np.ceil(len(validation_reference) / batch_size))
 
-            print("train_steps ", train_steps)
-            print("validation_steps ", val_steps)
+            print("steps_per_epoch_train ", train_steps)
+            print("steps_per_epoch_val ", val_steps)
 
-            # Fit the model
-            history = model.fit(train_dataset, epochs=num_epochs, steps_per_epoch=train_steps, validation_data=validation_dataset, validation_steps=val_steps)
+            history = model.fit(train_dataset, verbose=1, epochs=num_epochs, steps_per_epoch=train_steps,
+                                validation_data=validation_dataset, validation_steps=val_steps, callbacks=my_callbacks)
 
             plot_loss(history.history['loss'], history.history['val_loss'])
             plot_accuracy(history.history['accuracy'], history.history['val_accuracy'])
 
-            model.save('ModelPartialDataset_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
+            model.save('ModelEntireDataset_' +
+                       model.name + '_' + str(masking_fraction_train) + task_selected + '.h5')
 
+    if task_selected == "12_cl":
+        # analyze results by plotting confusion matrix
+        if use_all_training_set:
+            if partition_training_set:
+                model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.h5')
+                accuracy = model.evaluate(test_dataset, steps=test_steps)
+                print("Accuracy in the test_set model trained with all the unknown samples, partitioned= ", accuracy)
+                predictions = model.predict(test_dataset, steps=test_steps)
+                plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_balanced_training_set_' +
+                                      model.name + '_' + str(masking_fraction_train)+ task_selected + '.png')
 
-    # analyze results by plotting confusion matrix
-    if use_all_training_set:
-        if partition_training_set:
-            model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
-            accuracy = model.evaluate(test_dataset, steps=test_steps)
-            print("Accuracy in the test_set model trained with all the unknown samples, partitioned= ", accuracy)
-            predictions = model.predict(test_dataset, steps=test_steps)
-            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_balanced_training_set_' +
-                                  model.name + '_' + str(masking_fraction_train) + '.png')
+                plot_roc(predictions, test_dataset)
+            else:
+                model = tf.keras.models.load_model('ModelEntireDataset_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.h5')
+                accuracy = model.evaluate(test_dataset, steps=test_steps)
+                print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
+                predictions = model.predict(test_dataset, steps=test_steps)
+                plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_entire_training_set_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.png')
         else:
-            model = tf.keras.models.load_model('ModelEntireDataset_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
+            model = tf.keras.models.load_model('ModelPartialDataset_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.h5')
             accuracy = model.evaluate(test_dataset, steps=test_steps)
-            print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
+            print("Accuracy in the test_set using only subset of unknown samples= ", accuracy)
             predictions = model.predict(test_dataset, steps=test_steps)
-            plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_entire_training_set_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.png')
-    else:
-        model = tf.keras.models.load_model('ModelPartialDataset_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.h5')
+            plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_truncated_training_set_' +
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.png')
+    elif task_selected == "35_cl":
+        model = tf.keras.models.load_model('ModelEntireDataset_' +
+                                           model.name + '_' + str(masking_fraction_train) + task_selected + '.h5')
         accuracy = model.evaluate(test_dataset, steps=test_steps)
-        print("Accuracy in the test_set using only subset of unknown samples= ", accuracy)
+        print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
         predictions = model.predict(test_dataset, steps=test_steps)
-        plot_confusion_matrix(predictions, test_dataset, accuracy, 'confusion_matrix_truncated_training_set_' +
-                                  model.name + '_'+str(masking_fraction_train) + '.png')
+        plot_confusion_matrix(predictions, test_dataset, accuracy, classes,'confusion_matrix_entire_training_set_' +
+                              model.name + '_' + str(masking_fraction_train) + task_selected + '.png')
