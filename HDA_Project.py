@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import math
 
 from sklearn.metrics import confusion_matrix, roc_curve, auc
-from tensorflow.keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D
+from tensorflow.keras.layers import Dropout , SpatialDropout2D, Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D, Add
 from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
 
 from scipy.fftpack import dct
@@ -765,6 +765,342 @@ def cnn_trad_fpool3(input_shape, classes):
 
     return model
 
+##################################################################
+# RESIDUAL CNN
+# res8
+# res8_narrow
+# res15
+# res15_narrow
+# res26
+# res26_narrow
+##################################################################
+
+# res8
+def Res8SpeechModel(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(45, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 4), strides=None, padding='valid')(x)
+
+    # Res layer x 3
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=0, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=2, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    #x = identity_block(x, filters=[19, 19], stage=0)
+    #x = identity_block(x, filters=[19, 19], stage=1)
+    #x = identity_block(x, filters=[19, 19], stage=2)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8')
+
+    return model
+
+# res8 narrow
+def Res8SpeechModel_narrow(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(19, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 4), strides=None, padding='valid')(x)
+
+    # Res layer x 3
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=0, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=2, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    #x = identity_block(x, filters=[19, 19], stage=0)
+    #x = identity_block(x, filters=[19, 19], stage=1)
+    #x = identity_block(x, filters=[19, 19], stage=2)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8_narrow')
+
+    return model
+
+# res15
+def Res15SpeechModel(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3,3,45)
+    x = tf.keras.layers.Conv2D(45, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Res layer x 6
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=0, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=1, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=2, num=2, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=3, num=3, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=4, num=4, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=5, num=5, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    # Convolutional layer (3,3,45) + dilation (16,16)
+    x = tf.keras.layers.Conv2D(45, (3, 3), use_bias=False, activation='relu', dilation_rate=16, padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15')
+
+    return model
+
+# res15 narrow
+def Res15SpeechModel_narrow(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3,3,45)
+    x = tf.keras.layers.Conv2D(19, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Res layer x 6
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=0, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=1, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=2, num=2, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=3, num=3, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=4, num=4, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=5, num=5, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    # Convolutional layer (3,3,45) + dilation (16,16)
+    x = tf.keras.layers.Conv2D(19, (3, 3), use_bias=False, activation='relu', dilation_rate=16, padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res15_narrow')
+
+    return model
+
+# res26
+def Res26SpeechModel(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(45, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    # Res layer x 12
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=0, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=2, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=3, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=4, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=5, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=6, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=7, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=8, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=9, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=10, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[45, 45], stage=0, num=11, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res26')
+
+    return model
+
+# res26 narrow
+def Res26SpeechModel_narrow(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(19, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    # Res layer x 12
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=0, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=2, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=3, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=4, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=5, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=6, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=7, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=8, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=9, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=10, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=11, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
+    x = tf.keras.layers.Flatten()(x)
+    output = tf.keras.layers.Dense(12, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res26_narrow')
+
+    return model
+
+def identity_block(X, filters, stage):
+    """
+    Implementation of the identity block as defined in Figure 3
+
+    Arguments:
+    X -- input tensor of shape (m, n_H_prev, n_W_prev, n_C_prev)
+    f -- integer, specifying the shape of the middle CONV's window for the main path
+    filters -- python list of integers, defining the number of filters in the CONV layers of the main path
+    stage -- integer, used to name the layers, depending on their position in the network
+    block -- string/character, used to name the layers, depending on their position in the network
+
+    Returns:
+    X -- output of the identity block, tensor of shape (n_H, n_W, n_C)
+    """
+
+    # defining name basis
+    conv_name_base = 'res' + str(stage) +'_branch'
+    bn_name_base = 'bn' + str(stage) + '_branch'
+
+    # Retrieve Filters
+    F1, F2 = filters
+
+    # Save the input value
+    X_shortcut = X
+
+    ##### MAIN PATH #####
+    # First component of main path
+    X = Conv2D(F1, (3, 3), strides=(1,1), padding='same', use_bias=False, name=conv_name_base + '2a')(X)
+    X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
+    X = Activation('relu')(X)
+
+    # Third component of main path (≈2 lines)
+    X = Conv2D(filters=F2, kernel_size=(3, 3), strides=(1, 1), padding='same', use_bias=False, name=conv_name_base + '2b')(X)
+    X = BatchNormalization(axis=3, name=bn_name_base + '2b')(X)
+
+    # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
+    X = Add()([X, X_shortcut])
+    X = Activation('relu')(X)
+
+    return X
+
+def convolutional_block(X, filters, stage, num, stride):
+    """
+    Implementation of the convolutional block as defined in Figure 4
+
+    Arguments:
+    X -- input tensor of shape (m, n_H_prev, n_W_prev, n_C_prev)
+    f -- integer, specifying the shape of the middle CONV's window for the main path
+    filters -- python list of integers, defining the number of filters in the CONV layers of the main path
+    stage -- integer, used to name the layers, depending on their position in the network
+    block -- string/character, used to name the layers, depending on their position in the network
+    s -- Integer, specifying the stride to be used
+
+    Returns:
+    X -- output of the convolutional block, tensor of shape (n_H, n_W, n_C)
+    """
+
+    # defining name basis
+    conv_name_base = 'res' + str(num) + '_branch'
+    bn_name_base = 'bn' + str(num) + '_branch'
+
+    # Retrieve Filters
+    F1, F2 = filters
+
+    # Save the input value
+    X_shortcut = X
+
+    ##### MAIN PATH #####
+    # First component of main path
+    X = Conv2D(F1, (3, 3), strides=stride, padding='same', use_bias=False, name=conv_name_base + '2a', dilation_rate=int(2**(stage // 3)))(X)
+    X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
+    X = Activation('relu')(X)
+
+    # Third component of main path (≈2 lines)
+    X = Conv2D(filters=F2, kernel_size=(3, 3), strides=(1, 1), use_bias=False, padding='same', dilation_rate=int(2**(stage // 3)), name=conv_name_base + '2c')(X)
+    X = BatchNormalization(axis=3, name=bn_name_base + '2c')(X)
+
+    ##### SHORTCUT PATH #### (≈2 lines)
+    X_shortcut = Conv2D(filters=F2, kernel_size=(3, 3), strides=stride, use_bias=False, padding='same', dilation_rate=int(2**(stage // 3)), name=conv_name_base + '1')(X_shortcut)
+    X_shortcut = BatchNormalization(axis=3, name=bn_name_base + '1')(X_shortcut)
+
+    # Final step: Add shortcut value to main path, and pass it through a RELU activation (≈2 lines)
+    X = Add()([X, X_shortcut])
+    X = Activation('relu')(X)
+
+    return X
+
+######################################################################################
 
 def import_datasets_reference(masking_fraction_train = 0.0, task_selected="12_cl"):
     """
@@ -1161,20 +1497,29 @@ if __name__ == '__main__':
         plt.show()
         break
 
-
     # Call the function to create the model and compile it
-    #model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
-    #model = modelconvNN1((80, 126, 1), classes)
-    #model = ConvSpeechModel((80, 126, 1), classes)
-    #model = RNNSpeechModelOriginal((80, 126, 1), classes)
-    #model = AttRNNSpeechModel((80, 126, 1), classes)
-    #model = AttRNNSpeechModel1((80, 126, 1), classes)
-    #model = AttRNNSpeechModellite((80, 126, 1), classes)
-    model = AttRNNSpeechModelLightest((80, 126, 1), classes)
-    #model = AttRNNSpeechModelaccuracybest((80, 126, 1), classes)
-    #model = AttRNNSpeechModellitebest((80, 126, 1), classes)
-    #model = AttRNNSpeechModel((80, 126, 1), classes)
-    #model = cnn_trad_fpool3((80, 126, 1), classes)
+    # model = modelconvNN((n_mels, int(1/(frame_step)-1), 1))
+    # model = modelconvNN1((80, 126, 1), classes)
+    # model = ConvSpeechModel((80, 126, 1), classes)
+    # model = RNNSpeechModelOriginal((80, 126, 1), classes)
+    # model = AttRNNSpeechModel((80, 126, 1), classes)
+    # model = AttRNNSpeechModel1((80, 126, 1), classes)
+    # model = AttRNNSpeechModellite((80, 126, 1), classes)
+    # model = AttRNNSpeechModelLightest((80, 126, 1), classes)
+    # model = AttRNNSpeechModelaccuracybest((80, 126, 1), classes)
+    # model = AttRNNSpeechModellitebest((80, 126, 1), classes)
+    # model = AttRNNSpeechModel((80, 126, 1), classes)
+    # model = cnn_trad_fpool3((80, 126, 1), classes)
+
+    # Residual CNN models
+    # model = Res15SpeechModel((80, 126, 1))
+    # model = Res15SpeechModel_narrow((80, 126, 1))
+    model = Res8SpeechModel((80, 126, 1))
+    # model = Res8SpeechModel_narrow((80, 126, 1))
+    # model = Res26SpeechModel((80, 126, 1))
+    # model = Res26SpeechModel_narrow((80, 126, 1))
+
+    # model = modelconvNN1((80, 126, 1))
 
     model.summary()
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
