@@ -3,13 +3,9 @@
 /venv/
 /.idea/
 
-/train_cache.data-00000-of-00001
-/train_cache.index
-/validation_cache.data-00000-of-00001
-/validation_cache.index
-/test_cache.data-00000-of-00001
-/test_cache.index
-*.h5
+/*.h5
+
+*.wav
 
 /silence/
 /speech_commands_test_set_v0.02/
@@ -17,14 +13,8 @@
 *.data-00000-of-00001
 /my_model1.h5
 /HDA_Project_backup.py
-/confusion_matrix_balanced_training_set_AttRNNSpeechModel_0.7.png
-/confusion_matrix_balanced_training_set_RNNSpeechModel_0.7.png
-/confusion_matrix_truncated_training_set_RNNSpeechModel_0.7.png
 /HDA_ProjectCluster.py
 /Recurrent_NN_job.slurm
-/confusion_matrix_balanced_training_set_AttRNNSpeechModelbest2_0.512_cl.png
-/confusion_matrix_balanced_training_set_AttRNNSpeechModelitebest_0.512_cl.png
-/confusion_matrix_balanced_training_set_AttRNNSpeechModelLightest_0.512_cl.png
-/confusion_matrix_entire_training_set_AttRNNSpeechModel_0.535_cl.png
-/confusion_matrix_entire_training_set_AttRNNSpeechModelbest2_0.535_cl.png
-/confusion_matrix_entire_training_set_AttRNNSpeechModelLightest_0.535_cl.png
+*.png
+/Demo/.ipynb_checkpoints/
+

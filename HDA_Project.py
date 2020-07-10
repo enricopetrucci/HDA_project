@@ -129,7 +129,9 @@ def load_and_preprocess_data_librosa_mel_spectrogram(file_path):
     :param file_path: path of the sample considered
     :return: mel spectrogram of the audio file
     """
-    y, sr = librosa.load(file_path, sr=16000)
+
+
+    y, sr = librosa.load(file_path, 16000)
     N = y.shape[0]
     #print(N)
     target_size = 16000
@@ -518,53 +520,12 @@ def AttRNNSpeechModel(input_shape, classes, rnn_func=tf.keras.layers.LSTM):
 
     return model
 
-#940490 0.9413087964057922
-def AttRNNSpeechModellite(input_shape, classes, rnn_func=tf.keras.layers.GRU):
-
-    X_input = tf.keras.Input(input_shape)
-
-    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
-    # we would rather have it the other way around for LSTMs
-
-    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
-
-    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-
-    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
-    x = tf.keras.layers.Bidirectional(rnn_func(32,  return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-
-    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
-    query = tf.keras.layers.Dense(64)(xFirst)
-
-    # dot product attention
-    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
-    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
-
-    # rescale sequence
-    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
-
-    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
-
-    x = tf.keras.layers.Dense(32, activation='relu')(x)
-
-
-    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
-
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelite')
-
-    return model
 
 #25K parameters lightest but well regularized
 # 12_cl whole dataset 0.9588956832885742
-# 12_cl 0.952965259552002
+# 12_cl 0.952965259552002 0.9552147388458252
 # 35_cl 0.9362108111381531
-def AttRNNSpeechModelLightest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+def AttRNNSpeechModel25K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
 
     X_input = tf.keras.Input(input_shape)
 
@@ -605,14 +566,99 @@ def AttRNNSpeechModelLightest(input_shape, classes, rnn_func=tf.keras.layers.GRU
     x = tf.keras.layers.BatchNormalization()(x)
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
-
     model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelLightest')
+
+    return model
+
+#50k
+#940490 0.9413087964057922 0.9519427418708801 0.9472392797470093
+def AttRNNSpeechModel50K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(32,  return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(64)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelite')
+
+    return model
+
+
+# around 80K parameters a good compromise between light and accurate
+# 12_cl 0.95030677318573 0.947852790355 0.951329231262207
+def AttRNNSpeechModel80K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+    X_input = tf.keras.Input(input_shape)
+
+    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
+    # we would rather have it the other way around for LSTMs
+
+    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
+
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x) # since we only have one filter the output is back to being a single image
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    #x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModel80K')
 
     return model
 
 # 155K parameters best accuracy for 12_cl
 #12_cl 0.9527607560157776, 0.956646203994751 0.9597136974334717
-def AttRNNSpeechModelaccuracybest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+def AttRNNSpeechModel155K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
 
     X_input = tf.keras.Input(input_shape)
 
@@ -653,49 +699,6 @@ def AttRNNSpeechModelaccuracybest(input_shape, classes, rnn_func=tf.keras.layers
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
     model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelbest2')
-
-    return model
-
-# around 80K parameters a good compromise between light and accurate
-# 12_cl 0.95030677318573 0.947852790355
-def AttRNNSpeechModellitebest(input_shape, classes, rnn_func=tf.keras.layers.GRU):
-
-    X_input = tf.keras.Input(input_shape)
-
-    # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
-    # we would rather have it the other way around for LSTMs
-
-    x = tf.keras.layers.Permute((2, 1, 3))(X_input)
-
-    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-
-    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x) # since we only have one filter the output is back to being a single image
-    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    #x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-
-    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
-    query = tf.keras.layers.Dense(128)(xFirst)
-
-    # dot product attention
-    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
-    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
-
-    # rescale sequence
-    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
-
-    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
-
-    x = tf.keras.layers.Dense(32, activation='relu')(x)
-
-
-    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
-
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelitebest')
 
     return model
 
@@ -764,6 +767,25 @@ def cnn_trad_fpool3(input_shape, classes):
     model = tf.keras.Model(inputs=X_input, outputs=X, name='cnn_trad_fpool3')
 
     return model
+
+def CNN_TRAD_POOL2(input_shape, classes):
+    X_input = tf.keras.Input(input_shape)
+    X = tf.keras.layers.Conv2D(64, (20, 8), strides=(1, 1), activation='relu', padding='same')(X_input)
+    X = tf.keras.layers.Dropout(0.5)(X)
+    X = MaxPooling2D((2, 2), name='max_pool')(X)
+
+    X = tf.keras.layers.Conv2D(64, (10, 4), strides=(1, 1), activation='relu', padding='same')(X)
+    X = tf.keras.layers.Dropout(0.5)(X)
+    X = MaxPooling2D((2, 2), name='max_pool1')(X)
+
+    X = tf.keras.layers.Flatten()(X)
+
+    X = tf.keras.layers.Dense(classes, activation='softmax', name='fc3')(X)
+
+    # Create the keras model. This creates your Keras model instance, you'll use this instance to train/test the model.
+    model = tf.keras.Model(inputs=X_input, outputs=X, name='CNN_TRAD_POOL2')
+    return model
+
 
 ##################################################################
 # RESIDUAL CNN
@@ -1242,7 +1264,10 @@ def plot_confusion_matrix(predictions, test_dataset, accuracy, classes, save=Non
     cm = pd.DataFrame(cm, index=[i for i in cl],
                          columns=[i for i in cl])
 
-    plt.figure(figsize=(16, 10))
+    if classes == 12:
+        plt.figure(figsize=(8, 5))
+    else:
+        plt.figure(figsize=(16, 10))
     sn.heatmap(cm, annot=True)
     sn.set(font_scale=0.8)
     plt.title('Confusion matrix in the test set, overall accuracy = ' + str(accuracy))
@@ -1503,29 +1528,25 @@ if __name__ == '__main__':
     # model = ConvSpeechModel((80, 126, 1), classes)
     # model = RNNSpeechModelOriginal((80, 126, 1), classes)
     # model = AttRNNSpeechModel((80, 126, 1), classes)
-    # model = AttRNNSpeechModel1((80, 126, 1), classes)
-    # model = AttRNNSpeechModellite((80, 126, 1), classes)
-    # model = AttRNNSpeechModelLightest((80, 126, 1), classes)
-    # model = AttRNNSpeechModelaccuracybest((80, 126, 1), classes)
-    # model = AttRNNSpeechModellitebest((80, 126, 1), classes)
-    # model = AttRNNSpeechModel((80, 126, 1), classes)
+    #model = AttRNNSpeechModel25K((80, 126, 1), classes)
+    # model = AttRNNSpeechModel50K((80, 126, 1), classes)
+    model = AttRNNSpeechModel80K((80, 126, 1), classes)
     # model = cnn_trad_fpool3((80, 126, 1), classes)
+    # model = CNN_TRAD_POOL2((80, 126, 1), classes)
 
     # Residual CNN models
     # model = Res15SpeechModel((80, 126, 1))
     # model = Res15SpeechModel_narrow((80, 126, 1))
-    model = Res8SpeechModel((80, 126, 1))
+    # model = Res8SpeechModel((80, 126, 1))
     # model = Res8SpeechModel_narrow((80, 126, 1))
     # model = Res26SpeechModel((80, 126, 1))
     # model = Res26SpeechModel_narrow((80, 126, 1))
 
-    # model = modelconvNN1((80, 126, 1))
 
     model.summary()
     model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     test_steps = int(np.ceil(len(test_reference) / batch_size))
-    #model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' + model.name + '_' + str(masking_fraction_train) + '.h5')
     # train model and plot accuracy and loss behavior for training and validation sets at each epoch
     if train:
         my_callbacks = [
@@ -1599,6 +1620,9 @@ if __name__ == '__main__':
 
             model.save('ModelEntireDataset_' +
                        model.name + '_' + str(masking_fraction_train) + task_selected + '.h5')
+    else:
+        print("loading model")
+        model = tf.keras.models.load_model('ModelEntireDatasetPartitioned_' + model.name + '_' + str(masking_fraction_train)  + task_selected + '.h5')
 
     if task_selected == "12_cl":
         # analyze results by plotting confusion matrix
