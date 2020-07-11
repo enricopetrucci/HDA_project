@@ -797,6 +797,64 @@ def CNN_TRAD_POOL2(input_shape, classes):
 # res26_narrow
 ##################################################################
 
+"""
+ Res Speech Models
+ @ input_shape
+ @ name name of the model
+ @ nlayers number of layers
+ @ n_feature_maps number of kernels
+ @ pool if there is a pooling layer
+ @ dilation if there is dilation in Conv2D
+ @ poolSize size of pooling layer
+ @ classes number of classes
+"""
+def ResSpeechModelOriginal(input_shape, name, n_layers, n_feature_maps, pool, dilation, poolSize, classes):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3,3,45)
+    x = tf.keras.layers.Conv2D(n_feature_maps, (3, 3), use_bias=False, activation='relu', padding='same')(X_input)
+
+    if pool:
+        x = tf.keras.layers.AveragePooling2D(pool_size=poolSize, strides=None, padding='valid')(x)
+
+    if dilation:
+        for i in range(n_layers + 1):
+            if i == 0:
+                old_x = x
+                continue
+            x = Conv2D(n_feature_maps, (3, 3), strides=1, padding='same', use_bias=False, name=str(i) + 'Conv2D', dilation_rate=int(2**(i // 3)))(x)
+            y = Activation('relu')(x)
+            if i > 0 and i % 2 == 0:
+                x = Add()([y, old_x])
+                old_x = x
+            else:
+                x = y
+            if i > 0:
+                x = BatchNormalization(axis=3, trainable=False, name=str(i) + 'BatchNormalization')(x)
+    else:
+        for i in range(n_layers + 1):
+            if i == 0:
+                old_x = x
+                continue
+            x = Conv2D(n_feature_maps, (3, 3), strides=1, padding='same', use_bias=False, name=str(i) + 'Conv2D', dilation_rate=1)(x)
+            y = Activation('relu')(x)
+            if i > 0 and i % 2 == 0:
+                x = Add()([y, old_x])
+                old_x = x
+            else:
+                x = y
+            if i > 0:
+                x = BatchNormalization(axis=3, trainable=False, name=str(i) + 'BatchNormalization')(x)
+
+    x = tf.reduce_mean(x, [1,2])
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='ResSpeechoriginal' + name)
+
+    return model
+
 # res8
 def Res8SpeechModel(input_shape):
 
@@ -1541,6 +1599,15 @@ if __name__ == '__main__':
     # model = Res8SpeechModel_narrow((80, 126, 1))
     # model = Res26SpeechModel((80, 126, 1))
     # model = Res26SpeechModel_narrow((80, 126, 1))
+
+
+    ######### input_size, model name, number layers, number maps, pooling, dilation, size pooling, number classes #########
+    model = ResSpeechModelOriginal((80, 126, 1), 'res8', 6, 45, True, False, (3, 4), classes=classes)  # Res8
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res15', 13, 45, False, True, (1, 1), classes=classes)  # Res15
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res26', 24, 45, True, False, (2,2), classes=classes) #Res26
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res8_narrow', 6, 19, True, False, (3, 4), classes=classes)  # Res8_narrow
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res15_narrow', 13, 19, False, True, (1, 1), classes=classes)  # Res15_narrow
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res26_narrow', 24, 19, True, False, (2, 2), classes=classes)  # Res15_narrow
 
 
     model.summary()
