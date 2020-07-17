@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  17 JUL 2020 18:48
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  17 JUL 2020 20:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -916,12 +916,12 @@ Package pdftex.def Info: att.pdf  used on input line 67.
 File: res.pdf Graphic file (type pdf)
 <use res.pdf>
 Package pdftex.def Info: res.pdf  used on input line 94.
-(pdftex.def)             Requested size: 383.43156pt x 115.43095pt.
+(pdftex.def)             Requested size: 460.12256pt x 138.51855pt.
 <res_blocks.pdf, id=51, 683.55376pt x 374.39874pt>
 File: res_blocks.pdf Graphic file (type pdf)
 <use res_blocks.pdf>
 Package pdftex.def Info: res_blocks.pdf  used on input line 103.
-(pdftex.def)             Requested size: 341.77605pt x 187.19891pt.
+(pdftex.def)             Requested size: 321.27031pt x 175.96742pt.
  [4 <./att.pdf>]
 Underfull \hbox (badness 10000) in paragraph at lines 117--119
 []\OT1/ptm/m/n/10 Res26narrow has the same ini-tial struc-ture as
@@ -997,10 +997,10 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 18193 strings out of 494805
- 316283 string characters out of 6178000
+ 18194 strings out of 494805
+ 316301 string characters out of 6178000
  421701 words of memory out of 5000000
- 21245 multiletter control sequences out of 15000+600000
+ 21246 multiletter control sequences out of 15000+600000
  574925 words of font info for 127 fonts, out of 8000000 for 9000
  81 hyphenation exceptions out of 8191
  59i,10n,122p,10380b,335s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1011,7 +1011,7 @@ onts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/u
 tmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on template.pdf (7 pages, 367062 bytes).
+Output written on template.pdf (7 pages, 367130 bytes).
 PDF statistics:
  339 PDF objects out of 1000 (max. 8388607)
  115 compressed objects within 2 object streams

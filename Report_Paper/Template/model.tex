@@ -6,7 +6,7 @@
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[scale=.35]{processing_pipeline.pdf}}
-\caption{Diagram that shows the functioning of a voice-controlled devices.}
+\caption{Diagram that shows the functioning of voice-controlled devices.}
 \label{fig}
 \end{figure}
  
@@ -91,7 +91,7 @@ We will start by describing the model that in our opinion offers the best tradeo
 Subsequently in the section, we will describe all the other models, underlining the substantial differences between them.
 
 \begin{figure*}[htbp]
-\centerline{\includegraphics[scale=.5]{res.pdf}}
+\centerline{\includegraphics[scale=.6]{res.pdf}}
 \caption{Res15narrow model architecture.}
 \label{fig}
 \end{figure*}
@@ -100,7 +100,7 @@ Our best residual model is Res15narrow, which requires 53K parameters.
 It is composed of a first convolution layer with 19 filters and kernel size 3x3, followed by a ReLU activation layer and -- instead of dropout -- a batch normalization layer. 
 The model proceeds with six residual blocks, starting with an identity residual block, and alternating an identity block with a convolution block.
 \begin{figure*}[htbp]
-\centerline{\includegraphics[scale=.5]{res_blocks.pdf}}
+\centerline{\includegraphics[scale=.47]{res_blocks.pdf}}
 \caption{Details of the Identity and Convolution blocks.}
 \label{fig}
 \end{figure*}

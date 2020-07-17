@@ -7,11 +7,11 @@ In this section we will evaluate the performance of our new models in terms of a
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[scale=.6]{acc_vs_par.pdf}}
-\caption{Comparison of the accuracy and number of parameters between ours and previous models}
+\caption{Comparison of the accuracy and number of parameters between ours and previous models.}
 \label{avp}
 \end{figure}
 
-In Figure \ref{avp} we can see a comparison between our new models and the most promising models in the literature. The models we presented are refered to Att_improved in brown, res_narrow_improved in green and res8_lite in red.
+In Figure \ref{avp} we can see a comparison between our new models and the most promising models in the literature. The models we presented are refered to Att\_improved in brown, res_narrow_improved in green and res8_lite in red.
 It is clear that our new models bring a noticeable improvement: our enhanced recurrent neural network models based on the attention obtain similar accuracy results as in [1], while having only a fraction (up to 8 times less) of the parameters. The models Att87K and Att155K even slightly surpass the highest accuracy obtained up to now, that was 96.9\% in [1]. In fact, our models obtained respectively 97\% and 97.18\% while having fewer parameters. 
 Our res-net models can achieve at least 2\% higher accuracy than the models presented in [2]. However in this case it is worth noting that in [2] they used an older version of the dataset, and different feature extraction (MFCCs as opposed to Mel-Spectrogram). Overall from our tests it seems that our improved implementation of the attention-based recurrent neural networks provides better models: they obtain high accuracy even with limited amounts of parameters. However even our res-net models obtain satisfying levels of accuracy, and can provide a good alternative.
 
@@ -33,7 +33,7 @@ Our res-net models can achieve at least 2\% higher accuracy than the models pres
 
 \begin{figure}[htbp]
 \centerline{\includegraphics[scale=.5]{conf_att.pdf}}
-\caption{Att25K confusion matrix}
+\caption{Att25K confusion matrix.}
 \label{conf_att}
 \end{figure}
 
