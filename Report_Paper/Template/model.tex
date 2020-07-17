@@ -15,13 +15,13 @@ The keyword spotting problem that we are trying to solve consists of a multi-cla
 The dataset that we used (available at \cite{5} and described in \cite{4}), consists of one-second WAV files, for a total of 35 classes plus some additional audio files containing only background noise, from which it is possible to identify the silence samples.
 
 
-Each audio sample in the train set, validation set, and test set is initially processed in order to extract the audio features, that in our case consist of the Mel-scale spectrogram, and the resulting dataset is cached as a TensorFlow dataset in order to speed up the computations.
+Each audio sample in the train set, validation set, and test set is initially processed in order to extract the audio features, that in our case consist of the Mel-scale spectrogram, and the resulting dataset is cached as a \textit{TensorFlow} dataset in order to speed up the computations.
 These cached versions of the preprocessed dataset are then later used to train and evaluate 2 different classes of models: the first is based on the recurrent neural networks with the attention and the second based on the residual neural network architecture.
 
 
 Our recurrent neural network implementation was initially inspired by the model described in \cite{1}. 
 We improved the first convolutional layers that perform the extraction of local relations by modifying the kernel size and adopting a higher stride in order to keep a meaningful representation, while reducing the number of parameters downstream in the subsequent layers. The core of their implementation is the use of 2 bidirectional LSTM layers from which the attention weight is computed and then used to filter out or boost some components of the LSTM layer output.
-Since we are looking for low footprint and high accuracy models we decided to swap these LSTM layers for GRU layers.
+Since we are looking for small footprint and high accuracy models we decided to swap these LSTM layers for GRU layers.
 Another substantial change is the addition of regularization layers, both in the form of batch normalization layers and dropout layers (spatial dropout when dealing with two-dimensional data). These kinds of changes do not provide a problem in terms of model weight, since they could potentially only slow down the process of training, and do not impact the end devices in any way.
 
 
@@ -100,7 +100,6 @@ Our best residual model is Res15narrow, which requires 53K parameters.
 It is composed of a first convolution layer with 19 filters and kernel size 3x3, followed by a ReLU activation layer and -- instead of dropout -- a batch normalization layer. 
 The model proceeds with six residual blocks, starting with an identity residual block, and alternating an identity block with a convolution block.
 \begin{figure*}[htbp]
-\centerline{\includegraphics[scale=.47]{res_blocks.pdf}}
 \centerline{\includegraphics[scale=.47]{Identity_Conv_blocks.pdf}}
 \caption{Details of the Identity and Convolution blocks.}
 \label{fig}

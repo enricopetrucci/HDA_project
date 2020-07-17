@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  17 JUL 2020 20:09
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  17 JUL 2020 22:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -900,13 +900,13 @@ File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 
 ])
 (./model.tex
-<processing_pipeline.pdf, id=12, 702.625pt x 336.25626pt>
+<processing_pipeline.pdf, id=13, 702.625pt x 336.25626pt>
 File: processing_pipeline.pdf Graphic file (type pdf)
 <use processing_pipeline.pdf>
 Package pdftex.def Info: processing_pipeline.pdf  used on input line 8.
 (pdftex.def)             Requested size: 245.92242pt x 117.69145pt.
  [2 <./processing_pipeline.pdf>]
-<att.pdf, id=45, 842.14626pt x 276.03125pt>
+<att.pdf, id=46, 842.14626pt x 276.03125pt>
 File: att.pdf Graphic file (type pdf)
 <use att.pdf>
 Package pdftex.def Info: att.pdf  used on input line 67.
@@ -917,10 +917,10 @@ File: res.pdf Graphic file (type pdf)
 <use res.pdf>
 Package pdftex.def Info: res.pdf  used on input line 94.
 (pdftex.def)             Requested size: 460.12256pt x 138.51855pt.
-<res_blocks.pdf, id=51, 683.55376pt x 374.39874pt>
-File: res_blocks.pdf Graphic file (type pdf)
-<use res_blocks.pdf>
-Package pdftex.def Info: res_blocks.pdf  used on input line 103.
+<Identity_Conv_blocks.pdf, id=51, 683.55376pt x 374.39874pt>
+File: Identity_Conv_blocks.pdf Graphic file (type pdf)
+<use Identity_Conv_blocks.pdf>
+Package pdftex.def Info: Identity_Conv_blocks.pdf  used on input line 103.
 (pdftex.def)             Requested size: 321.27031pt x 175.96742pt.
  [4 <./att.pdf>]
 Underfull \hbox (badness 10000) in paragraph at lines 117--119
@@ -940,10 +940,10 @@ File: acc_vs_par.pdf Graphic file (type pdf)
 <use acc_vs_par.pdf>
 Package pdftex.def Info: acc_vs_par.pdf  used on input line 9.
 (pdftex.def)             Requested size: 260.17401pt x 173.44933pt.
- [5 <./res.pdf> <./res_blocks.pdf
+ [5 <./res.pdf> <./Identity_Conv_blocks.pdf
 
-pdfTeX warning: pdflatex (file ./res_blocks.pdf): PDF inclusion: multiple pdfs 
-with page group included in a single page
+pdfTeX warning: pdflatex (file ./Identity_Conv_blocks.pdf): PDF inclusion: mult
+iple pdfs with page group included in a single page
 > <./acc_vs_par.pdf
 
 pdfTeX warning: pdflatex (file ./acc_vs_par.pdf): PDF inclusion: multiple pdfs 
@@ -998,7 +998,7 @@ LaTeX Warning: There were multiply-defined labels.
  ) 
 Here is how much of TeX's memory you used:
  18194 strings out of 494805
- 316301 string characters out of 6178000
+ 316351 string characters out of 6178000
  421701 words of memory out of 5000000
  21246 multiletter control sequences out of 15000+600000
  574925 words of font info for 127 fonts, out of 8000000 for 9000
@@ -1011,7 +1011,7 @@ onts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/u
 tmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on template.pdf (7 pages, 367130 bytes).
+Output written on template.pdf (7 pages, 367947 bytes).
 PDF statistics:
  339 PDF objects out of 1000 (max. 8388607)
  115 compressed objects within 2 object streams

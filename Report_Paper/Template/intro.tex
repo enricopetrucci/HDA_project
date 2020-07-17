@@ -3,24 +3,24 @@
 \section{Introduction}
 \label{sec:introduction}
 
-In recent years, the diffusion of devices that rely on keyword spotting to start interactions has been steadily expanding. These kinds of devices that can be voice-activated and voice-controlled are increasingly common and more than ever part of our lives, from the phones inside our pockets and the watches on our wrists to the smart home devices (like Google Home or Amazon Echo), or even industrial equipment.
+In recent years, the diffusion of devices that rely on \textit{keyword spotting} to start interactions has been steadily expanding. These kinds of devices that can be \textit{voice-activated} and \textit{voice-controlled} are increasingly common and more than ever part of our lives, from the phones inside our pockets and the watches on our wrists to the smart home devices (like Google Home or Amazon Echo), or even industrial equipment.
 These systems are often connected to a powerful server that performs the heavy-duty computations like actual speech recognition. However, relying only on the remote processing power would imply transmitting a considerable amount of recordings over the web that isn't scalable and poses a problem for security and privacy.
 
 
 A possible solution is equipping these local devices with modules that can locally perform a keyword spotting task that eventually triggers the communication with the web service.
 These models need to be small and computationally light to be as energy-efficient as possible in order to run in battery-powered devices and with limited computational and cooling capabilities.
 The development of such speech command recognition models can be useful also for other applications in which the internet coverage is not available.
-This problem has already been addressed in the literature and the state-of-the-art results are presented in the papers \cite{1} \cite{2}, where small-footprint models are described. In \cite{1} the model presented is based on recurrent neural networks - that make use of the attention mechanism - and on residual networks. It was shown that using those kinds of architectures was possible to largely improve upon previous CNN models \cite{3}, both for accuracy and number of parameters. The results presented in these papers, especially in \cite{2}, show that the accuracy of their models suffered significantly when decreasing the number of parameters.
+This problem has already been addressed in the literature and the state-of-the-art results are presented in the papers \cite{1} \cite{2}, where small-footprint models are described. In \cite{1} the model presented is based on recurrent neural networks -- that make use of the attention mechanism -- and on residual networks. It was shown that using those kinds of architectures was possible to largely improve upon previous CNN models \cite{3}, both for accuracy and number of parameters. The results presented in these papers, especially in \cite{2}, show that the accuracy of their models suffered significantly when decreasing the number of parameters.
 
 
-In this work we present and compare different models -- that perform the keyword spotting task -- improving on the state of the art tradeoff between high accuracy and small footprint, exploring possible solutions by adopting both recurrent neural networks based on the attention mechanism and residual neural networks. A decrease in the model footprint could sensibly reduce hardware requirements, meaning fewer production costs that can imply lower retailing prices, and possibly less power consumption in battery-powered devices.
+In this work we present and compare different models -- that perform the keyword spotting task -- improving on the state of the art tradeoff between \textit{high accuracy} and \textit{small footprint}, exploring possible solutions by adopting both recurrent neural networks based on the attention mechanism and residual neural networks. A decrease in the model footprint could sensibly reduce hardware requirements, meaning fewer production costs that can imply lower retailing prices, and possibly less power consumption in battery-powered devices.
 
 
 In this paper we will introduce:
 \begin{itemize}
   \item an attention-based recurrent neural network that slightly improves the accuracy with respect to the best performing model in the literature, while having a smaller footprint; 
 
-  \item another model that, with 8 times fewer parameters than the previous best performing model, but can still achieve high accuracy of 96.6%;
+  \item another model that, with 8 times fewer parameters than the previous best performing model, but can still achieve high accuracy of 96.6\%;
   \item improved models based on the residual network architecture improving on the previously available tradeoff for this kind of model.
 
 \end{itemize}
