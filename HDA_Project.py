@@ -481,7 +481,7 @@ def ConvSpeechModel(input_shape, classes):
 
 # original model from paper
 # 12_cl: 0.9439672827720642  0.9359918236732483
-def AttRNNSpeechModel(input_shape, classes, rnn_func=tf.keras.layers.LSTM):
+def AttRNNSpeechModelOriginal(input_shape, classes, rnn_func=tf.keras.layers.LSTM):
 
     X_input = tf.keras.Input(input_shape)
 
@@ -516,7 +516,7 @@ def AttRNNSpeechModel(input_shape, classes, rnn_func=tf.keras.layers.LSTM):
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModel')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelOriginal')
 
     return model
 
@@ -535,16 +535,16 @@ def AttRNNSpeechModel25K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.Permute((2, 1, 3))(X_input)
 
     x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.SpatialDropout2D(0.1)(x)
-
+    x = tf.keras.layers.SpatialDropout2D(0.05)(x)
     x = tf.keras.layers.BatchNormalization()(x)
+
     # x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
     # x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
     x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
-    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
     #x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
 
     xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
@@ -566,7 +566,7 @@ def AttRNNSpeechModel25K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.BatchNormalization()(x)
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelLightest')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Att25K')
 
     return model
 
@@ -582,15 +582,20 @@ def AttRNNSpeechModel50K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.Permute((2, 1, 3))(X_input)
 
     x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.05)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.05)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.SpatialDropout2D(0.01)(x)
+
     x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
-    x = tf.keras.layers.Bidirectional(rnn_func(32,  return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(32,  return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
 
     xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
     query = tf.keras.layers.Dense(64)(xFirst)
@@ -603,20 +608,24 @@ def AttRNNSpeechModel50K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
 
     x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.05)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
 
     x = tf.keras.layers.Dense(32, activation='relu')(x)
-
+    x = tf.keras.layers.Dropout(0.05)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelite')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Att50K')
 
     return model
 
 
 # around 80K parameters a good compromise between light and accurate
 # 12_cl 0.95030677318573 0.947852790355 0.951329231262207
-def AttRNNSpeechModel80K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
+def AttRNNSpeechModel87K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     X_input = tf.keras.Input(input_shape)
 
     # note that Melspectrogram puts the sequence in shape (batch_size, melDim, timeSteps, 1)
@@ -625,15 +634,17 @@ def AttRNNSpeechModel80K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.Permute((2, 1, 3))(X_input)
 
     x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.05)(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.05)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.01)(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
     x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x) # since we only have one filter the output is back to being a single image
-    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    #x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(64,  return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
 
     xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
     query = tf.keras.layers.Dense(128)(xFirst)
@@ -645,14 +656,21 @@ def AttRNNSpeechModel80K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     # rescale sequence
     attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
 
-    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+    x = tf.keras.layers.Dense(128, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Dense(64, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
 
     x = tf.keras.layers.Dense(32, activation='relu')(x)
-
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
 
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModel80K')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Att87K')
 
     return model
 
@@ -668,18 +686,79 @@ def AttRNNSpeechModel155K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.Permute((2, 1, 3))(X_input)
 
     x = tf.keras.layers.Conv2D(32, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.1)(x)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.1)(x)
     x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
+    x = tf.keras.layers.SpatialDropout2D(0.01)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True, dropout=0.1))(x)  # [b_s, seq_len, vec_dim]
+
+    xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
+    query = tf.keras.layers.Dense(128)(xFirst)
+
+    # dot product attention
+    attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
+    attScores = tf.keras.layers.Softmax(name='attSoftmax')(attScores)  # [b_s, seq_len]
+
+    # rescale sequence
+    attVector = tf.keras.layers.Dot(axes=[1, 1])([attScores, x])  # [b_s, vec_dim]
+
+    x = tf.keras.layers.Dense(128, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+
+    x = tf.keras.layers.Dense(64, activation='relu')(attVector)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    x = tf.keras.layers.Dense(32, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Att155K')
+
+    return model
+
+def Res8narrowAndATTSpeechModel(input_shape):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(19, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 4), strides=None, padding='valid')(x)
+
+    # Res layer x 3
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=0, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=1, stride=2)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    x = convolutional_block(x, filters=[19, 19], stage=0, num=2, stride=1)
+    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(2, 2), strides=None, padding='valid')(x)
+
     x = tf.keras.layers.Conv2D(1, (3, 3), activation='relu', padding='same')(x)
     x = tf.keras.layers.BatchNormalization()(x)
 
     x = tf.keras.layers.Lambda(lambda q: tf.keras.backend.squeeze(q, -1), name='squeeze_last_dim')(x)
-    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
-    x = tf.keras.layers.Bidirectional(rnn_func(64, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    x = tf.keras.layers.Bidirectional(tf.keras.layers.GRU(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
+    #x = tf.keras.layers.Bidirectional(rnn_func(32, return_sequences=True))(x)  # [b_s, seq_len, vec_dim]
 
     xFirst = tf.keras.layers.Lambda(lambda q: q[:, -1])(x)  # [b_s, vec_dim]
-    query = tf.keras.layers.Dense(128)(xFirst)
+    query = tf.keras.layers.Dense(64)(xFirst)
 
     # dot product attention
     attScores = tf.keras.layers.Dot(axes=[1, 2])([query, x])
@@ -697,10 +776,10 @@ def AttRNNSpeechModel155K(input_shape, classes, rnn_func=tf.keras.layers.GRU):
     x = tf.keras.layers.BatchNormalization()(x)
 
     output = tf.keras.layers.Dense(classes, activation='softmax')(x)
-
-    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='AttRNNSpeechModelbest2')
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8narrowAndATTSpeechModel')
 
     return model
+
 
 
 # From the paper, poor accuracy, not useful
@@ -1404,7 +1483,6 @@ def step_decay(epoch):
 
 def plot_roc(predictions, test_dataset):
 
-
     real_labels = np.empty((0,12))
 
     for element in test_dataset.as_numpy_iterator():
@@ -1415,8 +1493,8 @@ def plot_roc(predictions, test_dataset):
 
 
     print(real_labels.shape)
-    print("real_labels = ",real_labels)
-    print("predictions = ",predictions)
+    print("real_labels = ", real_labels)
+    print("predictions = ", predictions)
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
@@ -1472,7 +1550,7 @@ if __name__ == '__main__':
     batch_size = 32
     unknown_used_fraction = 18
     num_epochs = 40
-    masking_fraction_train = 0.5
+    masking_fraction_train = 0.0
 
     task_selected = "12_cl" # "35_cl"#
 
@@ -1585,10 +1663,13 @@ if __name__ == '__main__':
     # model = modelconvNN1((80, 126, 1), classes)
     # model = ConvSpeechModel((80, 126, 1), classes)
     # model = RNNSpeechModelOriginal((80, 126, 1), classes)
-    # model = AttRNNSpeechModel((80, 126, 1), classes)
-    #model = AttRNNSpeechModel25K((80, 126, 1), classes)
-    # model = AttRNNSpeechModel50K((80, 126, 1), classes)
-    model = AttRNNSpeechModel80K((80, 126, 1), classes)
+    #model = AttRNNSpeechModelOriginal((80, 126, 1), classes)
+    model = AttRNNSpeechModel25K((80, 126, 1), classes)
+    #model = AttRNNSpeechModel40K((80, 126, 1), classes)
+    #model = AttRNNSpeechModel50K((80, 126, 1), classes)
+    #model = AttRNNSpeechModel87K((80, 126, 1), classes)
+    #model = AttRNNSpeechModel155K((80, 126, 1), classes)
+    #model = Res8narrowAndATTSpeechModel((80, 126, 1))
     # model = cnn_trad_fpool3((80, 126, 1), classes)
     # model = CNN_TRAD_POOL2((80, 126, 1), classes)
 
@@ -1602,7 +1683,7 @@ if __name__ == '__main__':
 
 
     ######### input_size, model name, number layers, number maps, pooling, dilation, size pooling, number classes #########
-    model = ResSpeechModelOriginal((80, 126, 1), 'res8', 6, 45, True, False, (3, 4), classes=classes)  # Res8
+    #model = ResSpeechModelOriginal((80, 126, 1), 'res8', 6, 45, True, False, (3, 4), classes=classes)  # Res8
     #model = ResSpeechModelOriginal((80, 126, 1), 'res15', 13, 45, False, True, (1, 1), classes=classes)  # Res15
     #model = ResSpeechModelOriginal((80, 126, 1), 'res26', 24, 45, True, False, (2,2), classes=classes) #Res26
     #model = ResSpeechModelOriginal((80, 126, 1), 'res8_narrow', 6, 19, True, False, (3, 4), classes=classes)  # Res8_narrow
@@ -1701,7 +1782,7 @@ if __name__ == '__main__':
                 print("Accuracy in the test_set model trained with all the unknown samples, partitioned= ", accuracy)
                 predictions = model.predict(test_dataset, steps=test_steps)
                 plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_balanced_training_set_' +
-                                      model.name + '_' + str(masking_fraction_train)+ task_selected + '.png')
+                                      model.name + '_' + str(masking_fraction_train)+ task_selected + '.pdf')
 
                 plot_roc(predictions, test_dataset)
             else:
@@ -1711,7 +1792,7 @@ if __name__ == '__main__':
                 print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
                 predictions = model.predict(test_dataset, steps=test_steps)
                 plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_entire_training_set_' +
-                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.png')
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.pdf')
         else:
             model = tf.keras.models.load_model('ModelPartialDataset_' +
                                       model.name + '_'+str(masking_fraction_train)+ task_selected + '.h5')
@@ -1719,7 +1800,7 @@ if __name__ == '__main__':
             print("Accuracy in the test_set using only subset of unknown samples= ", accuracy)
             predictions = model.predict(test_dataset, steps=test_steps)
             plot_confusion_matrix(predictions, test_dataset, accuracy, classes, 'confusion_matrix_truncated_training_set_' +
-                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.png')
+                                      model.name + '_'+str(masking_fraction_train)+ task_selected + '.pdf')
     elif task_selected == "35_cl":
         model = tf.keras.models.load_model('ModelEntireDataset_' +
                                            model.name + '_' + str(masking_fraction_train) + task_selected + '.h5')
@@ -1727,4 +1808,4 @@ if __name__ == '__main__':
         print("Accuracy in the test_set model trained with all the unknown samples= ", accuracy)
         predictions = model.predict(test_dataset, steps=test_steps)
         plot_confusion_matrix(predictions, test_dataset, accuracy, classes,'confusion_matrix_entire_training_set_' +
-                              model.name + '_' + str(masking_fraction_train) + task_selected + '.png')
+                              model.name + '_' + str(masking_fraction_train) + task_selected + '.pdf')
