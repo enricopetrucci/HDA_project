@@ -18,3 +18,59 @@
 *.png
 /Demo/.ipynb_checkpoints/
 
+/acc_vs_param.pdf
+/Definitive_models/Att25K.h5
+/Definitive_models/Att50K.h5
+/Definitive_models/Att87K.h5
+/Definitive_models/Att155K.h5
+/confusion_matrix_balanced_training_set_AttRNNSpeechModel25K_0.012_cl.pdf
+/confusion_matrix_balanced_training_set_AttRNNSpeechModel50K_0.012_cl.pdf
+/confusion_matrix_balanced_training_set_AttRNNSpeechModel85K_0.012_cl.pdf
+/confusion_matrix_balanced_training_set_AttRNNSpeechModel155K_0.012_cl.pdf
+/ConfusionMatrix_Att25K.pdf
+/ConfusionMatrix_Att50K.pdf
+/ConfusionMatrix_Att50Kflat.pdf
+/ConfusionMatrix_Att87K.pdf
+/ConfusionMatrix_Att87Kflat.pdf
+/ConfusionMatrix_Att155K.pdf
+/ConfusionMatrix_Att155Kflat.pdf
+/ConfusionMatrix_AttRNNSpeechModel25K.pdf
+/ConfusionMatrix_AttRNNSpeechModel50K.pdf
+/ConfusionMatrix_AttRNNSpeechModel85K.pdf
+/ConfusionMatrix_AttRNNSpeechModel155K.pdf
+/ConfusionMatrix_Res8_lite.pdf
+/ConfusionMatrix_Res8_liteflat.pdf
+/ConfusionMatrix_Res8_narrow.pdf
+/ConfusionMatrix_Res8_narrowflat.pdf
+/ConfusionMatrix_Res15_narrow.pdf
+/ConfusionMatrix_Res26_narrow.pdf
+/ConfusionMatrix_Res26_narrowflat.pdf
+/MODELLI RES/BEST MY MODELS/ModelEntireDatasetPartitioned_Res8_____0.012_cl.h5
+/MODELLI RES/BEST MY MODELS/ModelEntireDatasetPartitioned_Res8_narrow_0.012_cl.h5
+/MODELLI RES/BEST MY MODELS/ModelEntireDatasetPartitioned_Res15_narrow___0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/ModelEntireDatasetPartitioned_Res15originalModel_0.012_cl.h5
+/MODELLI RES/BEST MY MODELS/ModelEntireDatasetPartitioned_Res26_narrow_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/ModelEntireDatasetPartitioned_ResSpeechoriginalres8_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/ModelEntireDatasetPartitioned_ResSpeechoriginalres8_narrow_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/other/ModelEntireDatasetPartitioned_ResSpeechoriginalres15_narrow_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/other/ModelEntireDatasetPartitioned_ResSpeechoriginalres26_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/ModelEntireDatasetPartitioned_ResSpeechoriginalres26_0.012_cl.h5
+/MODELLI RES/MODELLI RES ORIGINALI/ModelEntireDatasetPartitioned_ResSpeechoriginalres26_narrow_0.012_cl.h5
+/MODELLI RES/BEST MY MODELS/BEST/output_10369.txt
+/MODELLI RES/BEST MY MODELS/output_10444.txt
+/MODELLI RES/BEST MY MODELS/output_10445.txt
+/MODELLI RES/MODELLI RES ORIGINALI/other/output_10583.txt
+/MODELLI RES/BEST MY MODELS/BEST/output_10601.txt
+/MODELLI RES/BEST MY MODELS/output_10617.txt
+/MODELLI RES/BEST MY MODELS/BEST/output_10625.txt
+/MODELLI RES/BEST MY MODELS/BEST/output_10641.txt
+/MODELLI RES/BEST MY MODELS/output_10653.txt
+/Definitive_models/Res8_lite.h5
+/MODELLI RES/BEST MY MODELS/BEST/Res8_lite.h5
+/Definitive_models/Res8_narrow.h5
+/MODELLI RES/BEST MY MODELS/BEST/Res8_narrow.h5
+/Definitive_models/Res15_narrow.h5
+/MODELLI RES/BEST MY MODELS/BEST/Res15_narrow.h5
+/Definitive_models/Res26_narrow.h5
+/MODELLI RES/BEST MY MODELS/BEST/Res26_narrow.h5
+/ROC.pdf

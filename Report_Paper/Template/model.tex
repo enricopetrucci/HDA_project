@@ -1,0 +1,125 @@
+% !TEX root = template.tex
+
+
+\section{Processing Pipeline}
+\label{sec:processing_architecture}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[scale=.35]{processing_pipeline.pdf}}
+\caption{Diagram that shows the functioning of a voice-controlled devices.}
+\label{fig}
+\end{figure}
+ 
+
+The keyword spotting problem that we are trying to solve consists of a multi-class classification task with 12 classes. In particular, 10 of these classes correspond to certain words -- namely "Yes", "No", "Up", "Down", "Left", "Right", "On", "Off", "Stop", and "Go" -- while the remaining 2 are reserved for silence and unknown words.
+The dataset that we used (available at \cite{5} and described in \cite{4}), consists of one-second WAV files, for a total of 35 classes plus some additional audio files containing only background noise, from which it is possible to identify the silence samples.
+
+
+Each audio sample in the train set, validation set, and test set is initially processed in order to extract the audio features, that in our case consist of the Mel-scale spectrogram, and the resulting dataset is cached as a TensorFlow dataset in order to speed up the computations.
+These cached versions of the preprocessed dataset are then later used to train and evaluate 2 different classes of models: the first is based on the recurrent neural networks with the attention and the second based on the residual neural network architecture.
+
+
+Our recurrent neural network implementation was initially inspired by the model described in \cite{1}. 
+We improved the first convolutional layers that perform the extraction of local relations by modifying the kernel size and adopting a higher stride in order to keep a meaningful representation, while reducing the number of parameters downstream in the subsequent layers. The core of their implementation is the use of 2 bidirectional LSTM layers from which the attention weight is computed and then used to filter out or boost some components of the LSTM layer output.
+Since we are looking for low footprint and high accuracy models we decided to swap these LSTM layers for GRU layers.
+Another substantial change is the addition of regularization layers, both in the form of batch normalization layers and dropout layers (spatial dropout when dealing with two-dimensional data). These kinds of changes do not provide a problem in terms of model weight, since they could potentially only slow down the process of training, and do not impact the end devices in any way.
+
+
+Our residual neural network implementation is based on models described in \cite{2}.
+In our implementation, we used a combination of two residual blocks. A first block is a standard residual block that applies an identity function to the input. The second block is described in \cite{14}, where learnable parameters are added to the skip connection, in order to create a nonlinear connection. This technique is useful to reduce the dimensionality of the input for the subsequent layers.
+A substantial change is the way in which we organize layers in the residual blocks. In fact, after each convolution layer follows a batch normalization layer and a ReLU activation unit. We also do not use convolution dilation in our models.
+
+
+In order to maintain small the number of parameters of our models, we tried to keep the number of feature maps low, but without decreasing the performance of the model.
+As in \cite{2}, we reduce the size of the input for the final fully connected layer, using a Reduce Mean layer instead of an Average pooling layer.
+We noticed that this type of implementation is capable of learning the useful structures of the Mel-Spectrogram, speeding up the learning and also regularizing the model.
+
+\section{Signals and Features}
+\label{sec:model}
+
+As mentioned in the Processing Pipeline, the dataset provided by \cite{5} is composed of one-second WAV files, for a total of 35 classes. We adopted the same train-validation-test split that comes with the dataset (80-10-10) and used the test set provided separately \cite{6} that also contains already separated silence samples and a single class called "Unknown" containing a mixture of samples from the classes that we do not care to identify.
+This test set contains a similar amount of samples for each of the 12 classes, a ratio that obviously doesn't reflect the classes distribution in the training set that is characterized by an abundance of samples labeled as unknown (25 classes of the entire dataset are actually labeled as unknown, while all the other 10 are taken individually). We solved this distribution problem by filtering randomly, at each training epoch, a suited amount of "Unknown" samples in order to train with the right proportions among all the classes, and to use the entire dataset available.
+
+
+Since audio samples are usually never fed to a neural network as raw audio files, we tried to explore two common methods for extracting audio features: the Mel-scale spectrogram, and the Mel-frequency cepstral coefficients.
+The Mel-scale spectrogram consists of performing the Fast Fourier Transform on overlapping windowed segments of the audio signal. The resulting frequencies are then converted by using the Mel-scale that mimics the sensitivity of the human ear for the different frequencies. Usually the final Mel-Spectrogram is computed by taking the logarithm of the previous values.
+The MFCCs are the result of even further processing of the Mel-scale spectrogram. These kinds of features are obtained by applying an additional DCT and eventually selecting a certain number of coefficients.
+After some initial tests, we realized that the first method yielded better results, using models of similar size, even when trying different numbers of MFCCs and changing the other preprocessing parameters. This is probably because of the more correlated structure -- also in frequency -- of the features extracted using the Mel-Spectrogram and the fact that neural networks usually work better with rich and more complex representations of the input samples, opposed to imposed and over-processed features as it happens by computing the MFCCs.
+
+
+Our preprocessing is done by using the Librosa library \cite{7} that provides built-in functions for computing both Mel-Spectrograms and MFCCs. The audio sample is first normalized and then a feature map that consists of an 80-band Mel-scale and 126 time samples, using a 1024 discrete Fourier transform. As neural network input we use the log of the Mel-Spectrogram normalized again.
+
+
+\section{Learning Framework}
+\label{sec:learning_framework}
+
+In this paper we explore two different kinds of architectures and evaluate the tradeoff of different models between accuracy and number of the model parameters. These two families of learning models are attention-based recurrent neural networks and residual neural networks.
+The models are implemented by using a high-level API called Keras, based on the TensorFlow library.
+Each model is trained similarly, by the use of Adam optimizer \cite{8} for at most 40 epochs. We decided to use the early stopping technique that terminates learning after 10 epochs in which the validation loss does not decrease, and then select the best performing model found during training. Since the problem consists of a multiclass classification we used the sparse categorical cross-entropy loss.
+The learning rate follows a custom schedule: it starts from 0.01 and it is decreased by a factor of 0.4 every 15 epochs. The training is divided into batches of 32 samples. As previously mentioned, the dataset is preprocessed by extracting the audio features, then it is cached and at each epoch filtered in order to train with a balanced proportion between all the classes that resemble the one in the test set.
+
+
+
+\subsection{Attention-based recurrent neural networks} 
+In this section we will describe 4 models that are based on the recurrent neural networks that use attention. We will start by describing the lightest model and then we will underline the changes between the bigger models.
+
+\begin{figure*}[htbp]
+\centerline{\includegraphics[scale=.5]{att.pdf}}
+\caption{Att25K model architecture.}
+\label{fig}
+\end{figure*}
+
+Our lightest attention model is Att25K, and it requires only 25K parameters. It features two convolutional layers, the first with 32 filters and the second with 1, both with kernel size 3x3. 
+These convolutional filters, other than reducing the dimensionality of the input -- since the first convolutional layer has stride equals  2 -- are used to extract local dependency both in frequency and time from the original Mel-Spectrogram.
+After each convolution, the ReLU activation function is used and both spatial dropout and batch normalization techniques are deployed for regularization purposes. The second convolutional layer has only one filter in order to effectively be managed by the following bidirectional GRU layer that counts 32 units per direction. 
+The output of this recurrent layer is used for computing the attention weights. This is done by taking a dense projection of a single output vector from this layer -- in our case the last one -- and this produces the query. Subsequently, by performing the dot product between the query and the actual output of the GRU layer and taking the softmax, the attention weights are found. The GRU layer output is then filtered by these weights thanks to a dot product. The computation follows 3 fully connected layers for the final classification; the first two use the ReLU activation function, while at the last one the softmax is applied. In order to better generalize the models a dropout layer and a batch normalization layer are used in between each dense layer.
+Most of the model parameters are used in the bidirectional GRU layer, which is the main component of our model.
+The other attention-based models that we propose have a similar structure and are called: Att50K, Att87K, and Att155K. They have respectively 50, 87, and 155 thousands of parameters.
+\begin{itemize}
+  \item Att50K features an additional convolutional layer at the beginning with the same parameters of the first one in Att25K, and two GRU layers with 32 units per direction, instead of one.
+  \item Att87K has the same initial convolutional layers as Att50K, but a single bidirectional GRU layer with double the parameters, and an additional dense layer for the classification, with 128 neurons.
+  \item Att155K is characterized by double the filters in the second convolutional layer with respect to Att87K and two GRU layers with the same parameters.
+
+\end{itemize}
+The advantage of using the attention mechanism -- other than being a valuable solution that provides high accuracy -- is that it can easily allow us to visualize, by plotting the attention weights, the most crucial parts in the sample, which determined the final decision as shown in \cite{1}.
+
+
+  
+\subsection{Residual neural networks}
+In this section we will describe 4 models that are based on the residual neural network.
+We will start by describing the model that in our opinion offers the best tradeoff between accuracy and number of parameters for this kind of architecture.
+Subsequently in the section, we will describe all the other models, underlining the substantial differences between them.
+
+\begin{figure*}[htbp]
+\centerline{\includegraphics[scale=.5]{res.pdf}}
+\caption{Res15narrow model architecture.}
+\label{fig}
+\end{figure*}
+
+Our best residual model is Res15narrow, which requires 53K parameters.
+It is composed of a first convolution layer with 19 filters and kernel size 3x3, followed by a ReLU activation layer and -- instead of dropout -- a batch normalization layer. 
+The model proceeds with six residual blocks, starting with an identity residual block, and alternating an identity block with a convolution block.
+\begin{figure*}[htbp]
+\centerline{\includegraphics[scale=.5]{res_blocks.pdf}}
+\caption{Details of the Identity and Convolution blocks.}
+\label{fig}
+\end{figure*}
+The identity block is composed of two convolution layers with 19 filters and kernel size 3x3. The first one is followed by a batch normalization layer and a ReLU activation layer. The second convolution layer is followed by only a batch normalization layer. At the beginning of the block, the original input is stored, and will be added to the output of the two convolution layers. After the summation, a ReLU activation layer closes the block.
+The convolution block is similar, but with the difference that the first convolution block has strides = 2. This is used to reduce the dimensionality of the input while extracting local dependency from the original Mel-Spectrogram.
+In this case, in order to preserve the same dimensionality between input and output -- needed to add them together -- we apply to the original input a convolution block with 19 filters, kernel size 3x3 and strides = 2.
+A separate non-residual convolution layer and batch normalization layer are further appended to the chain of residual blocks. Instead of a standard Average pooling 2D, a Reduce Mean is used to drastically reduce the dimensionality of the input, that at this point is [10, 16, 19]. The Reduce Mean computes the mean between all the values for each filter, returning a vector of size 19. The latter is fed to a softmax fully connected layer for the final classification.
+Almost all of the parameters are equally distributed inside the multiple convolutional layers, leading the network to be quite deep, while keeping the number of parameters rather small.
+The other res-net models that we propose have a similar structure and are called: Res8narrow, Res26narrow, and Res8lite. They have respectively 23.4, 92.4, and 57 thousands of parameters.
+\begin{itemize}
+  \item Res8narrow is composed of a first convolution layer, followed by a 2D average pooling with a 3x4 pool size, thus reducing its output both in time and frequency.
+The number of residual blocks is halved (3) compared to Res15narrow, obtaining a very compact model.
+
+  \item Res26narrow has the same initial structure as Res8narrow, that is, a convolution layer followed by an average pooling layer but with size 2x2. 
+In this model the number of residual blocks is doubled (12) with respect to Res15narrow, obtaining a deeper model.
+
+  \item Res8lite is characterized, after an initial convolution layer, by a convolution residual block followed by two identity residual blocks. The main difference from other models is that we used 30 filters in each convolution layer instead of 19. 
+
+\end{itemize}
+All models end with a Reduce Mean layer, followed by a softmax fully connected layer for the final classification.
+We noticed, after some tests, that the final Reduce Mean layer is very useful: not only it  reduces the final input size, but it also functions as a regularizer. We also noticed that dropout layers are not very useful with our models, since they only degrade the performance of the model.
+

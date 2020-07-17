@@ -1,0 +1,10 @@
+% !TEX root = template.tex
+
+\section{Concluding Remarks}
+\label{sec:conclusions}
+
+In this paper we studied two different architectures: attention-based recurrent neural networks and residual networks. We proposed several models for each architecture, that differ by the number of parameters, but all of them can be considered to have high, and almost comparable, accuracy. Some of our models even outperform the previous state-of-the-art solutions, while having fewer parameters. In particular, our most relevant model, Att25K with only 25K parameters can achieve an accuracy of 96.6\%. Finding small-footprint models that can achieve high accuracy is crucial in order to deploy devices that can mount less expensive and less powerful hardware, while performing the task of keyword spotting for voice control in a reliable way.
+In a real-world application we think that smarter management of silence samples would be very useful since most of the time the input recordings are likely to be silence. This should be better done independently from the neural network model, limiting the use of the latter only if the sample detected contained a certain amount of sound.
+
+During this project we learned how to deal with audio samples and how to extract features from them. We explored two important neural network architectures, namely attention-based recurrent neural networks and residual neural networks.
+Moreover, we gained a particular sensibility towards the model dimension, and how it is important for some kind of applications to find models that can deliver high accuracy while having a small footprint.

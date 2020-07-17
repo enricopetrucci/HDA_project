@@ -1,0 +1,26 @@
+% !TEX root = template.tex
+
+\section{Related Work}
+\label{sec:related_work}
+
+In the literature the use of neural networks for solving the keyword spotting problem -- that consists in the identification of speech commands -- is not new and this allows us to have a good reference point in terms of both accuracy and model dimension for different architectures. In \cite{4}, where the dataset that we used is presented, along with the instructions on how to perform training and testing, there is also a baseline of the accuracy in the test set by a simple model that consists of a convolutional neural network inspired by \cite{10}. In \cite{3} they improved the convolutional neural networks models, comparing straiding and pooling both in time and frequencies in order to reduce the number of parameters and multiplications. Moreover, they have shown the advantages of using CNN as opposed to DNN.
+
+
+A greater improvement from simple CNNs has been seen in \cite{2}, where residual neural networks are explored with relative success. In that paper are presented both wide models that obtain high accuracy, and narrow models that are only a fraction of the former, but inevitably pay a small degradation in terms of performance.
+All models proposed are characterized by several convolution blocks, each composed of two layers, and where the input of that block is added to its output. These kinds of networks are capable of learning very complex functions avoiding the problem of vanishing gradients, typical of very deep networks. The authors tried to contain the number of parameters of models: by limiting the number of convolution residual blocks, using convolution dilation, and implementing average pooling layers in order to reduce the input size.
+They also used a Reduce Mean layer just before the Dense layer, computing only one value for each feature matrix, this technique is very useful to reduce the number of parameters in the final fully connected layer and we noticed that it works well as regularization.
+
+
+In \cite{1} the approach used is the one of recurrent neural networks based on the attention mechanism that, to the best of our knowledge, is the model that obtains the highest accuracy, while having a reasonably small number of parameters. The model they proposed uses, after some convolutions, two bidirectional LSTM layers to extract the long-term dependencies and deploys the attention mechanism to identify the regions containing the most relevant information. The final classification is performed by using dense layers.
+
+
+Attention-based recurrent neural networks \cite{11,12} have been able to improve the performance on multiple tasks, mostly in sequence to sequence problems, but had some success even in classification tasks. The advantage of these kinds of models is the fact that different parts of the input are considered with a different magnitude: greater focus is reserved to the most relevant parts of the input.
+
+
+Deep residual neural networks (ResNets) \cite{9} represent a groundbreaking advance in deep learning that allows us to successfully train very deep networks.
+Prior to ResNets, training very deep neural networks was difficult due to the problem of vanishing gradients: as the gradient is back-propagated to earlier layers, repeated multiplication may make the gradient extremely small.
+As a result, the performance of the neural network decreases as the network becomes deeper.
+ResNets introduced the concept of skip connection.  In common CNNs, we stack more convolutional layers one after the other. With skip connection, we also add the original input to the output of the convolutional block, that is, two or more convolutional layers stacked one after another.
+This technique helps to alleviate the vanishing gradients phenomenon and, allowing the model to learn an identity function, ensures that the higher layer will perform at least as good as the lower layer, and not worse.
+ResNets were first applied to image recognition, where they contributed to a significant improvement in terms of performance and accuracy \cite{9}, and have subsequently been applied to automatic speech recognition \cite{13}.
+
