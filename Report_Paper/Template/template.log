@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  17 JUL 2020 22:40
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2020.7.17)  18 JUL 2020 12:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -747,6 +747,10 @@ File: listings.cfg 2015/06/04 1.6 listings configuration
 ))
 Package: listings 2015/06/04 1.6 (Carsten Heinz)
 
+(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip22
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
 )
@@ -777,7 +781,7 @@ File: lstlang3.sty 2015/06/04 1.6 listings language file
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
 File: lstmisc.sty 2015/06/04 1.6 (Carsten Heinz)
 )
-** ATTENTION: Overriding command lockouts (line 105).
+** ATTENTION: Overriding command lockouts (line 107).
 \c@remark=\count305
 (./template.aux
 
@@ -792,18 +796,18 @@ LaTeX Warning: Label `fig' multiply defined.
 )
 \openout1 = `template.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 111.
-LaTeX Font Info:    ... okay on input line 111.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 113.
+LaTeX Font Info:    ... okay on input line 113.
 
 -- Lines per column: 56 (exact).
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
@@ -879,18 +883,18 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count312
-LaTeX Font Info:    Calculating math sizes for size <11> on input line 113.
-LaTeX Font Info:    Try loading font information for U+msa on input line 113.
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 115.
+LaTeX Font Info:    Try loading font information for U+msa on input line 115.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 113.
+LaTeX Font Info:    Try loading font information for U+msb on input line 115.
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Try loading font information for U+rsfs on input line 113.
+LaTeX Font Info:    Try loading font information for U+rsfs on input line 115.
 
 (/usr/share/texlive/texmf-dist/tex/latex/jknapltx/ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
@@ -904,80 +908,79 @@ File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 File: processing_pipeline.pdf Graphic file (type pdf)
 <use processing_pipeline.pdf>
 Package pdftex.def Info: processing_pipeline.pdf  used on input line 8.
-(pdftex.def)             Requested size: 245.92242pt x 117.69145pt.
- [2 <./processing_pipeline.pdf>]
-<att.pdf, id=46, 842.14626pt x 276.03125pt>
+(pdftex.def)             Requested size: 421.57825pt x 201.75531pt.
+ [2]
+<att.pdf, id=17, 842.14626pt x 276.03125pt>
 File: att.pdf Graphic file (type pdf)
 <use att.pdf>
-Package pdftex.def Info: att.pdf  used on input line 67.
+Package pdftex.def Info: att.pdf  used on input line 57.
 (pdftex.def)             Requested size: 421.0721pt x 138.01527pt.
- [3]
-<res.pdf, id=50, 766.865pt x 230.8625pt>
+ [3 <./processing_pipeline.pdf>]
+<res.pdf, id=43, 766.865pt x 230.8625pt>
 File: res.pdf Graphic file (type pdf)
 <use res.pdf>
-Package pdftex.def Info: res.pdf  used on input line 94.
+Package pdftex.def Info: res.pdf  used on input line 97.
 (pdftex.def)             Requested size: 460.12256pt x 138.51855pt.
-<Identity_Conv_blocks.pdf, id=51, 683.55376pt x 374.39874pt>
+<Identity_Conv_blocks.pdf, id=44, 683.55376pt x 374.39874pt>
 File: Identity_Conv_blocks.pdf Graphic file (type pdf)
 <use Identity_Conv_blocks.pdf>
-Package pdftex.def Info: Identity_Conv_blocks.pdf  used on input line 103.
+Package pdftex.def Info: Identity_Conv_blocks.pdf  used on input line 106.
 (pdftex.def)             Requested size: 321.27031pt x 175.96742pt.
  [4 <./att.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 117--119
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 120--122
 []\OT1/ptm/m/n/10 Res26narrow has the same ini-tial struc-ture as
  []
 
 
-Underfull \hbox (badness 3229) in paragraph at lines 117--119
+Underfull \hbox (badness 3229) in paragraph at lines 120--122
 \OT1/ptm/m/n/10 Res8narrow, that is, a con-vo-lu-tion layer fol-lowed
  []
 
-) (./results.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
+[5 <./res.pdf> <./Identity_Conv_blocks.pdf
 
-<acc_vs_par.pdf, id=66, 433.62pt x 289.08pt>
+pdfTeX warning: pdflatex (file ./Identity_Conv_blocks.pdf): PDF inclusion: mult
+iple pdfs with page group included in a single page
+>]) (./results.tex
+<acc_vs_par.pdf, id=90, 433.62pt x 289.08pt>
 File: acc_vs_par.pdf Graphic file (type pdf)
 <use acc_vs_par.pdf>
 Package pdftex.def Info: acc_vs_par.pdf  used on input line 9.
 (pdftex.def)             Requested size: 260.17401pt x 173.44933pt.
- [5 <./res.pdf> <./Identity_Conv_blocks.pdf
-
-pdfTeX warning: pdflatex (file ./Identity_Conv_blocks.pdf): PDF inclusion: mult
-iple pdfs with page group included in a single page
-> <./acc_vs_par.pdf
-
-pdfTeX warning: pdflatex (file ./acc_vs_par.pdf): PDF inclusion: multiple pdfs 
-with page group included in a single page
->]
-<conf_att.pdf, id=146, 505.89pt x 361.35pt>
+<conf_att.pdf, id=91, 505.89pt x 361.35pt>
 File: conf_att.pdf Graphic file (type pdf)
 <use conf_att.pdf>
 Package pdftex.def Info: conf_att.pdf  used on input line 35.
 (pdftex.def)             Requested size: 252.94437pt x 180.67456pt.
-<conf_res.pdf, id=147, 505.89pt x 361.35pt>
+<conf_res.pdf, id=92, 505.89pt x 361.35pt>
 File: conf_res.pdf Graphic file (type pdf)
 <use conf_res.pdf>
 Package pdftex.def Info: conf_res.pdf  used on input line 41.
 (pdftex.def)             Requested size: 252.94437pt x 180.67456pt.
-<ROC.pdf, id=148, 462.52798pt x 346.89601pt>
+<ROC.pdf, id=93, 462.52798pt x 346.89601pt>
 File: ROC.pdf Graphic file (type pdf)
 <use ROC.pdf>
 Package pdftex.def Info: ROC.pdf  used on input line 54.
 (pdftex.def)             Requested size: 231.26341pt x 173.44757pt.
 ) (./conclusions.tex
+Underfull \vbox (badness 2197) has occurred while \output is active []
+
+ [6 <./acc_vs_par.pdf> <./conf_att.pdf
+
+pdfTeX warning: pdflatex (file ./conf_att.pdf): PDF inclusion: multiple pdfs wi
+th page group included in a single page
+> <./conf_res.pdf
+
+pdfTeX warning: pdflatex (file ./conf_res.pdf): PDF inclusion: multiple pdfs wi
+th page group included in a single page
+>]
 Underfull \hbox (badness 1845) in paragraph at lines 6--8
 []\OT1/ptm/m/n/10 In this pa-per we stud-ied two dif-fer-ent ar-chi-tec-tures:
  []
 
-[6 <./conf_att.pdf> <./conf_res.pdf
-
-pdfTeX warning: pdflatex (file ./conf_res.pdf): PDF inclusion: multiple pdfs wi
-th page group included in a single page
-> <./ROC.pdf
-
-pdfTeX warning: pdflatex (file ./ROC.pdf): PDF inclusion: multiple pdfs with pa
-ge group included in a single page
->]) (./template.bbl)
+) (./template.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -989,18 +992,16 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[7
-
-] (./template.aux)
+[7 <./ROC.pdf>] (./template.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 18194 strings out of 494805
- 316351 string characters out of 6178000
- 421701 words of memory out of 5000000
- 21246 multiletter control sequences out of 15000+600000
+ 18266 strings out of 494805
+ 317220 string characters out of 6178000
+ 421805 words of memory out of 5000000
+ 21314 multiletter control sequences out of 15000+600000
  574925 words of font info for 127 fonts, out of 8000000 for 9000
  81 hyphenation exceptions out of 8191
  59i,10n,122p,10380b,335s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1011,10 +1012,10 @@ onts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/u
 tmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on template.pdf (7 pages, 367947 bytes).
+Output written on template.pdf (7 pages, 357157 bytes).
 PDF statistics:
- 339 PDF objects out of 1000 (max. 8388607)
- 115 compressed objects within 2 object streams
+ 333 PDF objects out of 1000 (max. 8388607)
+ 111 compressed objects within 2 object streams
  0 named destinations out of 1000 (max. 500000)
  41 words of extra memory for PDF output out of 10000 (max. 10000000)
 

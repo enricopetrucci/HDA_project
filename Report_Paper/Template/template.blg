@@ -3,47 +3,48 @@ Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
 The top-level auxiliary file: template.aux
 The style file: ieeetr.bst
 Database file #1: biblio.bib
-Warning--empty booktitle in 9
+Warning--empty journal in 1
+Warning--empty journal in 11
 Warning--empty booktitle in 7
 You've used 14 entries,
             1876 wiz_defined-function locations,
-            521 strings with 5050 characters,
-and the built_in function-call counts, 2452 in all, are:
-= -- 170
-> -- 169
+            526 strings with 5327 characters,
+and the built_in function-call counts, 2384 in all, are:
+= -- 166
+> -- 175
 < -- 0
-+ -- 62
-- -- 48
-* -- 160
-:= -- 374
-add.period$ -- 14
++ -- 64
+- -- 50
+* -- 183
+:= -- 404
+add.period$ -- 16
 call.type$ -- 14
 change.case$ -- 12
 chr.to.int$ -- 0
-cite$ -- 16
-duplicate$ -- 102
-empty$ -- 278
-format.name$ -- 48
-if$ -- 581
+cite$ -- 17
+duplicate$ -- 117
+empty$ -- 247
+format.name$ -- 50
+if$ -- 538
 int.to.chr$ -- 0
 int.to.str$ -- 14
-missing$ -- 4
-newline$ -- 45
+missing$ -- 10
+newline$ -- 47
 num.names$ -- 12
-pop$ -- 95
+pop$ -- 65
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 60
+skip$ -- 27
 stack$ -- 0
-substring$ -- 28
-swap$ -- 12
+substring$ -- 0
+swap$ -- 9
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
-warning$ -- 2
-while$ -- 14
+warning$ -- 3
+while$ -- 12
 width$ -- 16
-write$ -- 101
-(There were 2 warnings)
+write$ -- 115
+(There were 3 warnings)

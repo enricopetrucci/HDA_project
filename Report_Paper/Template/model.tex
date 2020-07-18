@@ -4,11 +4,11 @@
 \section{Processing Pipeline}
 \label{sec:processing_architecture}
 
-\begin{figure}[htbp]
-\centerline{\includegraphics[scale=.35]{processing_pipeline.pdf}}
+\begin{figure*}[htbp]
+\centerline{\includegraphics[scale=.6]{processing_pipeline.pdf}}
 \caption{Diagram that shows the functioning of voice-controlled devices.}
 \label{fig}
-\end{figure}
+\end{figure*}
  
 
 The keyword spotting problem that we are trying to solve consists of a multi-class classification task with 12 classes. In particular, 10 of these classes correspond to certain words -- namely "Yes", "No", "Up", "Down", "Left", "Right", "On", "Off", "Stop", and "Go" -- while the remaining 2 are reserved for silence and unknown words.
@@ -37,7 +37,7 @@ We noticed that this type of implementation is capable of learning the useful st
 \section{Signals and Features}
 \label{sec:model}
 
-As mentioned in the Processing Pipeline, the dataset provided by \cite{5} is composed of one-second WAV files, for a total of 35 classes. We adopted the same train-validation-test split that comes with the dataset (80-10-10) and used the test set provided separately \cite{6} that also contains already separated silence samples and a single class called "Unknown" containing a mixture of samples from the classes that we do not care to identify.
+As mentioned in Section III, the dataset provided by \cite{5} is composed of one-second WAV files, for a total of 35 classes. We adopted the same train-validation-test split that comes with the dataset (80-10-10) and used the test set provided separately \cite{6} that also contains already separated silence samples and a single class called "Unknown" containing a mixture of samples from the classes that we do not care to identify.
 This test set contains a similar amount of samples for each of the 12 classes, a ratio that obviously doesn't reflect the classes distribution in the training set that is characterized by an abundance of samples labeled as unknown (25 classes of the entire dataset are actually labeled as unknown, while all the other 10 are taken individually). We solved this distribution problem by filtering randomly, at each training epoch, a suited amount of "Unknown" samples in order to train with the right proportions among all the classes, and to use the entire dataset available.
 
 
@@ -53,21 +53,24 @@ Our preprocessing is done by using the Librosa library \cite{7} that provides bu
 \section{Learning Framework}
 \label{sec:learning_framework}
 
+\begin{figure*}[htbp]
+\centerline{\includegraphics[scale=.5]{att.pdf}}
+\caption{Att25K model architecture.}
+\label{fig}
+\end{figure*}
+
+
 In this paper we explore two different kinds of architectures and evaluate the tradeoff of different models between accuracy and number of the model parameters. These two families of learning models are attention-based recurrent neural networks and residual neural networks.
 The models are implemented by using a high-level API called Keras, based on the TensorFlow library.
 Each model is trained similarly, by the use of Adam optimizer \cite{8} for at most 40 epochs. We decided to use the early stopping technique that terminates learning after 10 epochs in which the validation loss does not decrease, and then select the best performing model found during training. Since the problem consists of a multiclass classification we used the sparse categorical cross-entropy loss.
+
+
 The learning rate follows a custom schedule: it starts from 0.01 and it is decreased by a factor of 0.4 every 15 epochs. The training is divided into batches of 32 samples. As previously mentioned, the dataset is preprocessed by extracting the audio features, then it is cached and at each epoch filtered in order to train with a balanced proportion between all the classes that resemble the one in the test set.
 
 
 
 \subsection{Attention-based recurrent neural networks} 
 In this section we will describe 4 models that are based on the recurrent neural networks that use attention. We will start by describing the lightest model and then we will underline the changes between the bigger models.
-
-\begin{figure*}[htbp]
-\centerline{\includegraphics[scale=.5]{att.pdf}}
-\caption{Att25K model architecture.}
-\label{fig}
-\end{figure*}
 
 Our lightest attention model is Att25K, and it requires only 25K parameters. It features two convolutional layers, the first with 32 filters and the second with 1, both with kernel size 3x3. 
 These convolutional filters, other than reducing the dimensionality of the input -- since the first convolutional layer has stride equals  2 -- are used to extract local dependency both in frequency and time from the original Mel-Spectrogram.
