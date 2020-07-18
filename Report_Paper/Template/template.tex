@@ -27,7 +27,7 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{url}
-
+\usepackage{hyperref}
 
 \lstset{%
  backgroundcolor=\color[gray]{.85},
@@ -115,10 +115,10 @@
 \maketitle
 
 \begin{abstract}
-The problem of Keyword spotting (KWS) has been gaining relevance in recent years due to the increasing diffusion of voice controlled devices. These kinds of devices require high accuracy models, in order to be reliable enough, but with a small footprint since their limited power consumption and hardware capabilities.
-In this paper we investigate two learning architectures, namely recurrent neural networks that use the attention mechanism, and residual neural networks to address this problem and propose new models.
-Our best recurrent neural networks can outperform the previous state-of-the-art models while having less parameters. The most accurate model that we found has an accuracy of 97.1\% while having 155K parameters.  We also present a lightweight model that has only  25K parameters, a fraction of the usual amount, but manages to perform comparably and sometimes even better than larger models in the literature, managing to reach an accuracy of 96.6\%.
-Even our res-net models managed to surpass, in terms of performance, the previous models that were based on this kind of architecture. We show detailed comparisons between our new models and the best models in previous literature.
+The problem of Keyword Spotting (KWS) has been gaining relevance in recent years due to the increasing spread of voice controlled devices. These kinds of devices require high accuracy models in order to be reliable enough, but a small footprint because of their limited power and hardware capabilities.
+In this paper we investigate two learning architectures to address this problem and propose new models: recurrent neural networks -- that use the attention mechanism -- and residual neural networks.
+Our best recurrent neural networks can outperform the previous state-of-the-art models while having fewer parameters. The most accurate model that we found has an accuracy of 97.1\% while having 155K parameters.  We also present a lightweight model that only has 25K parameters -- a fraction of the usual amount -- but manages to perform comparably and sometimes even better than larger models in the literature, reaching an accuracy of 96.6\%.
+Even our ResNet models manage to surpass, in terms of performance, the previous models that were based on this kind of architecture. We show detailed comparisons between our new models and the best models in previous literature.
 These kinds of high accuracy, but small-footprint models are crucial for delivering less expensive and reliable devices.\\ 
 \end{abstract}
 

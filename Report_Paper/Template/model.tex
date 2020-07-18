@@ -11,7 +11,7 @@
 \end{figure*}
  
 
-The keyword spotting problem that we are trying to solve consists of a multi-class classification task with 12 classes. In particular, 10 of these classes correspond to certain words -- namely "Yes", "No", "Up", "Down", "Left", "Right", "On", "Off", "Stop", and "Go" -- while the remaining 2 are reserved for silence and unknown words.
+The keyword spotting problem that we are trying to solve consists of a multi-class classification task with 12 classes. In particular, 10 of these classes correspond to certain words -- namely ``Yes", ``No", ``Up", ``Down", ``Left", ``Right", ``On", ``Off", ``Stop", and ``Go" -- while the remaining 2 are reserved for silence and unknown words.
 The dataset that we used (available at \cite{5} and described in \cite{4}), consists of one-second WAV files, for a total of 35 classes plus some additional audio files containing only background noise, from which it is possible to identify the silence samples.
 
 
@@ -37,7 +37,7 @@ We noticed that this type of implementation is capable of learning the useful st
 \section{Signals and Features}
 \label{sec:model}
 
-As mentioned in Section III, the dataset provided by \cite{5} is composed of one-second WAV files, for a total of 35 classes. We adopted the same train-validation-test split that comes with the dataset (80-10-10) and used the test set provided separately \cite{6} that also contains already separated silence samples and a single class called "Unknown" containing a mixture of samples from the classes that we do not care to identify.
+As mentioned in Section III, the dataset provided by \cite{5} is composed of one-second WAV files, for a total of 35 classes. We adopted the same train-validation-test split that comes with the dataset (80-10-10) and used the test set provided separately \cite{6} that also contains already separated silence samples and a single class called ``Unknown'' containing a mixture of samples from the classes that we do not care to identify.
 This test set contains a similar amount of samples for each of the 12 classes, a ratio that obviously doesn't reflect the classes distribution in the training set that is characterized by an abundance of samples labeled as unknown (25 classes of the entire dataset are actually labeled as unknown, while all the other 10 are taken individually). We solved this distribution problem by filtering randomly, at each training epoch, a suited amount of "Unknown" samples in order to train with the right proportions among all the classes, and to use the entire dataset available.
 
 
