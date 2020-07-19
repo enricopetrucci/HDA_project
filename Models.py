@@ -638,6 +638,37 @@ def Res8SpeechModel_narrow(input_shape, classes):
     return model
 
 """
+ Res8lite Speech Model with 57K parameters
+ @ input_shape
+ @ classes number of classes
+"""
+def Res8SpeechModel_lite(input_shape, classes):
+
+    X_input = tf.keras.Input(input_shape)
+
+    # Convolutional layer (3, 3, 19)
+    x = tf.keras.layers.Conv2D(30, (3, 3), use_bias=False, activation='relu', padding='valid')(X_input)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    # Average pooling layer
+    x = tf.keras.layers.AveragePooling2D(pool_size=(3, 4), strides=None, padding='valid')(x)
+
+    # Res block x 3
+    # identity block -> convolution block -> identity block 
+    x = convolutional_block(x, filters=[30, 30], stage=0, num=0, stride=1)
+    x = convolutional_block(x, filters=[30, 30], stage=0, num=1, stride=2)
+    x = convolutional_block(x, filters=[30, 30], stage=0, num=2, stride=1)
+
+    # Reduce Mean layer
+    x = tf.reduce_mean(x, [1,2])
+
+    output = tf.keras.layers.Dense(classes, activation='softmax')(x)
+
+    model = tf.keras.Model(inputs=[X_input], outputs=[output], name='Res8_lite')
+
+    return model
+
+"""
  Res15 Speech Model
  @ input_shape
  @ classes number of classes
