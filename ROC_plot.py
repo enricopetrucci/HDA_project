@@ -1,12 +1,5 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-from HDA_Project import *
-
-from sklearn.metrics import confusion_matrix, roc_curve, auc
-from tensorflow.keras.layers import Dropout , SpatialDropout2D, Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D, Add
-from tensorflow.keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
+from Models import *
+from Utilities import *
 
 def compute_roc(predictions, test_dataset):
 
@@ -113,8 +106,8 @@ with tf.device("/cpu:0"):
     elif task_selected == "35_cl":
         classes = 35
 
-    train_reference, validation_reference, test_reference = import_datasets_reference(
-        task_selected=task_selected)
+    train_reference, validation_reference, test_reference = import_datasets_reference('train_dataset.txt', 'validation_dataset.txt', 'real_test_dataset.txt',  masking_fraction_train=masking_fraction_train, task_selected=task_selected)
+
 
     numToClass, classToNum = generate_classes_dictionaries(dataset_path, task_selected)
 
@@ -139,7 +132,7 @@ with tf.device("/cpu:0"):
         print("Accuracy on the test_set model trained with all the unknown samples, partitioned= ", accuracy)
         predictions = model.predict(test_dataset, steps=test_steps)
         roc_curves.append(compute_roc(predictions, test_dataset))
-        plot_confusion_matrix_final(predictions, test_dataset, accuracy[1], classes, i, "ConfusionMatrix_"+i+"flat.pdf")
+        plot_confusion_matrix_final(predictions, test_dataset, accuracy[1], classes, i, "ConfusionMatrix_"+i+".pdf")
 
     res_models = ["Res8_lite", "Res8_narrow", "Res15_narrow", "Res26_narrow"]
     for i in res_models:
