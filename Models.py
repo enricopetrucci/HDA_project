@@ -655,8 +655,8 @@ def Res8SpeechModel_lite(input_shape, classes):
 
     # Res block x 3
     # identity block -> convolution block -> identity block 
-    x = convolutional_block(x, filters=[30, 30], stage=0, num=0, stride=1)
-    x = convolutional_block(x, filters=[30, 30], stage=0, num=1, stride=2)
+    x = convolutional_block(x, filters=[30, 30], stage=0, num=0, stride=2)
+    x = convolutional_block(x, filters=[30, 30], stage=0, num=1, stride=1)
     x = convolutional_block(x, filters=[30, 30], stage=0, num=2, stride=1)
 
     # Reduce Mean layer
