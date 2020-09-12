@@ -135,7 +135,7 @@ if __name__ == '__main__':
     for element in train_dataset.as_numpy_iterator():
         plt.figure(figsize=(17, 6))
         plt.pcolormesh(element[0][0, :, :, 0])
-        plt.title('Spectrogram visualization - librosa. Sample class = ' + numToClass[element[1][0]])
+        plt.title('Spectrogram visualization - librosa. Sample class = ' + numToClass[element[0][1]])
         plt.ylabel('Frequency')
         plt.xlabel('Time')
         plt.colorbar()

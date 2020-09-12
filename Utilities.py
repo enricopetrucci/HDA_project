@@ -371,22 +371,22 @@ def import_datasets_reference(train, validation, test, masking_fraction_train = 
 
     if masking_fraction_train > 0:
         mask_train = np.random.rand(train_reference.size) >= masking_fraction_train
-        print(mask_train)
-        print("train_reference size before mask ", train_reference.size)
+        #print(mask_train)
+        #print("train_reference size before mask ", train_reference.size)
         train_reference = train_reference[mask_train]
-        print("train_reference size after mask ", train_reference.size)
-    else:
-        print("train_reference size: ", train_reference.size)
+        #print("train_reference size after mask ", train_reference.size)
+    # else:
+    #     print("train_reference size: ", train_reference.size)
 
     validation_reference = pd.read_csv(validation, index_col=0, header=None, names=['label'])
 
-    print("Validation_reference size: ", validation_reference.size)
+    #print("Validation_reference size: ", validation_reference.size)
     if task_selected == "12_cl":
         test_reference = pd.read_csv(test, index_col=0, header=None, names=['label'])
-        print("test_reference size: ", test_reference.size)
+        #print("test_reference size: ", test_reference.size)
     elif task_selected == "35_cl":
         test_reference = pd.read_csv('test_dataset.txt', index_col=0, header=None, names=['label'])
-        print("test_reference size: ", test_reference.size)
+        #print("test_reference size: ", test_reference.size)
 
     return train_reference, validation_reference, test_reference
 
@@ -434,8 +434,8 @@ def generate_classes_dictionaries(dataset_path, task_selected):
                 numToClass[num] = cl
                 num += 1
 
-    print(classToNum)
-    print(numToClass)
+    # print(classToNum)
+    # print(numToClass)
     return numToClass, classToNum
 
 
