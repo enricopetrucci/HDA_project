@@ -158,14 +158,15 @@ if __name__ == '__main__':
     # model = CNN_TRAD_POOL2((80, 126, 1), classes)
 
     # Residual CNN models
-    # model = Res15SpeechModel((80, 126, 1))
-    # model = Res15SpeechModel_narrow((80, 126, 1))
-    # model = Res8SpeechModel((80, 126, 1))
-    # model = Res8SpeechModel_narrow((80, 126, 1))
-    # model = Res26SpeechModel((80, 126, 1))
-    # model = Res26SpeechModel_narrow((80, 126, 1))
+    # model = Res8SpeechModel((80, 126, 1), classes)
+    # model = Res8SpeechModel_narrow((80, 126, 1), classes)
+    # model = Res15SpeechModel((80, 126, 1), classes)
+    # model = Res15SpeechModel_narrow((80, 126, 1), classes)
+    # model = Res26SpeechModel((80, 126, 1), classes)
+    # model = Res26SpeechModel_narrow((80, 126, 1), classes)
+    # model = Res8SpeechModel_lite((80, 126, 1), classes)
 
-
+    # Original residual models
     ######### input_size, model name, number layers, number maps, pooling, dilation, size pooling, number classes #########
     #model = ResSpeechModelOriginal((80, 126, 1), 'res8', 6, 45, True, False, (3, 4), classes=classes)  # Res8
     #model = ResSpeechModelOriginal((80, 126, 1), 'res15', 13, 45, False, True, (1, 1), classes=classes)  # Res15
